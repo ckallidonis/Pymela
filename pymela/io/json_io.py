@@ -6,7 +6,8 @@ def parse(ini_file):
     return data
 #-------------------------------
 
-def dump(iniDict):
-    print('Got the following input:\n')
-    print(json.dumps(iniDict, indent = 4, sort_keys=True))
+def dumpDictObject(dictObj,printMessage=''):
+    if printMessage != '':
+        print(printMessage)
+    print(json.dumps(dictObj, indent = 2, sort_keys=True))
 #-------------------------------
