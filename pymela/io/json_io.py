@@ -8,5 +8,5 @@ def parse(ini_file):
 
 def dump(iniDict):
     print('Got the following input:\n')
-    print(iniDict)
+    print(json.dumps(iniDict, indent = 4, sort_keys=True))
 #-------------------------------
