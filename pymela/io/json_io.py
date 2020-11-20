@@ -7,5 +7,6 @@ def parse(ini_file):
 #-------------------------------
 
 def dump(iniDict):
+    print('Got the following input:\n')
     print(iniDict)
 #-------------------------------
