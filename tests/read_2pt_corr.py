@@ -1,3 +1,11 @@
+'''
+Created on Nov.20, 2020
+@author: Christos Kallidonis
+Copyright (C) 2020. All rights reserved.
+
+Simple test that read two-point correlation functions
+'''
+
 import sys, os
 import optparse
 
@@ -10,6 +18,9 @@ sys.dont_write_bytecode = True
 
 # Import local modules
 import pymela.io.json_io as JSONio
+import pymela.io.io_conventions as io_conv
+
+from pymela.twopointcorr import *
 
 
 # Parse command line options
@@ -28,4 +39,13 @@ if input_file == '':
 
 # Parse and print out the input file
 iniDict = JSONio.parse(input_file)
-JSONio.dump(iniDict)
+JSONio.dumpDictObject(iniDict,'\n%s - Got the following Input:' %(__file__.split('/')[-1]))
+
+
+c2pt_dataInfo = iniDict[io_conv.c2ptDataInfoTag]
+analysisInfo = iniDict[io_conv.analysisInfoTag]
+ensembleInfo = iniDict[io_conv.ensembleInfoTag]
+
+
+c2pt = TwoPointCorrelator(dataInfo = c2pt_dataInfo, analysisInfo = analysisInfo)
+c2pt.printInfo()
