@@ -1,3 +1,11 @@
+'''
+Created on Nov.20, 2020
+@author: Christos Kallidonis
+Copyright (C) 2020. All rights reserved.
+
+This file contains functions related to I/O
+'''
+
 import json
 import io_conventions as ioConv
 
