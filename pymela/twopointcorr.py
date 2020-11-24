@@ -52,7 +52,7 @@ class TwoPointCorrelator():
             try:
                 momVec = dSet['mom']
             except:
-                raise ValueError('Each dataset must have a "z-Mom" key, whose value must be an integer.')
+                raise ValueError('Each dataset must have a "mom" key, whose value must be a list with three elements.')
             self.moms.append(momVec)
 
             mTag = tags.momString(momVec)
