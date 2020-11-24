@@ -56,3 +56,8 @@ ensembleInfo = ioDict[ioConv.ensembleInfoTag]
 
 c2pt = TwoPointCorrelator(dataInfo = c2pt_dataInfo, analysisInfo = analysisInfo)
 c2pt.printInfo()
+
+c2pt.getData()
+
+#print(c2pt.t0)
+#print(c2pt.moms)
