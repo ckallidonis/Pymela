@@ -45,7 +45,7 @@ JSONio.dumpDictObject(ioDict,'\n%s - Got the following Input:' %(fileName))
 
 # Make cheks on Input data
 for infoTag, infoDict in ioDict.items():
-    JSONio.makeInputChecks(infoTag, infoDict, runType)
+    JSONio.makeInputChecks(runType,infoTag, infoDict)
 
 
 c2pt_dataInfo = ioDict[ioConv.c2ptDataInfoTag]
@@ -58,6 +58,3 @@ c2pt = TwoPointCorrelator(dataInfo = c2pt_dataInfo, analysisInfo = analysisInfo)
 c2pt.printInfo()
 
 c2pt.getData()
-
-#print(c2pt.t0)
-#print(c2pt.moms)
