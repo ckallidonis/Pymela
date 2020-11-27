@@ -6,7 +6,7 @@ Copyright (C) 2020. All rights reserved.
 Contains functions that define the directory and file format of input/output files
 '''
 
-def getTwoPointFileASCII(phM,t0Tag,src,snk,srow,mFTag,nvec):
+def getTwoPointFileNameASCII(phM,t0Tag,src,snk,srow,mFTag,nvec):
         filePre = 'corr_2pt.baryon.n%d'%(nvec)
     
         srcTag = 'src_%s_%d'%(src,srow)
