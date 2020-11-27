@@ -17,7 +17,9 @@ ensembleInfoTag = 'Ensemble Info'
 inputInfoTags = {'2pt analysis': [analysisInfoTag, c2ptDataInfoTag, ensembleInfoTag]}
 
 # What is expected in each object of the JSON input file
-expectedInput = {c2ptDataInfoTag: ['Data Main Directory', 'Nt', 'Source Operator File', 'Sink Operator File',
-                                   'Operator Nrows', 'Compute X-rows', 'Datasets', 'Data Source'],
-                 analysisInfoTag: ['Phasing Tag', 'Nvec', 'Ncfg'],
+expectedKeys = {c2ptDataInfoTag:  ['Data Main Directory', 'Datasets', 'Data Source'],
+                 analysisInfoTag: ['Phasing Tag', 'Nvec'],
                  ensembleInfoTag: ['Tag', 'L', 'T', 'alat fm', 'mpi GeV', 'mN GeV']}
+
+expectedSubKeys = {c2ptDataInfoTag: {'Datasets': ['mom', 'Ncfg', 't0','Nt','Source Operators File',
+                                                  'Sink Operators File','Operator Nrows','Compute X-rows']}}
