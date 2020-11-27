@@ -21,11 +21,17 @@ def dumpDictObject(dictObj,printMessage=''):
     print(json.dumps(dictObj, indent = 2, sort_keys=True))
 #-------------------------------
 
-def makeInputChecks(infoTag,infoDict,runType):
+def makeInputChecks(runType,infoTag,infoDict):
     if infoTag not in ioConv.inputInfoTags[runType]:
         raise ValueError('Expected object %s in JSON input file' % (infoTag))
+        
+    for key in ioConv.expectedKeys[infoTag]:
+        if key not in infoDict:
+            raise ValueError('Expected entry "%s" in object "%s" of JSON input file' % (key,infoTag))
 
-    for input in ioConv.expectedInput[infoTag]:
-        if input not in infoDict:
-            raise ValueError('Expected entry "%s" in object "%s" of JSON input file' % (input,infoTag))
+        if infoTag in ioConv.expectedSubKeys.keys() and key in ioConv.expectedSubKeys[infoTag].keys():
+            for val in ioConv.expectedSubKeys[infoTag][key]:
+                for subDict in infoDict[key]:
+                    if val not in subDict.keys():
+                        raise ValueError('Expected entry "%s" in sub-object "%s/%s" of JSON input file' % (val,infoTag,key))
 #-------------------------------
