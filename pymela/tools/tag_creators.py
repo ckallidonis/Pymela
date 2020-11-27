@@ -16,7 +16,7 @@ def momFile(mom):
     return 'momXYZ.' + '.'.join([str(i) for i in mom])
 
 def momString(mom):
-    return ','.join([str(i) for i in mom])
+    return ','.join([valSgnPN(i) for i in mom])
 
 def t0(t0):
     return 't0_%d'%(t0)
