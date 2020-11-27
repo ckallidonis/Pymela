@@ -22,4 +22,4 @@ expectedKeys = {c2ptDataInfoTag:  ['Data Main Directory', 'Datasets', 'Data Sour
                  ensembleInfoTag: ['Tag', 'L', 'T', 'alat fm', 'mpi GeV', 'mN GeV']}
 
 expectedSubKeys = {c2ptDataInfoTag: {'Datasets': ['mom', 'Ncfg', 't0','Nt','Source Operators File',
-                                                  'Sink Operators File','Operator Nrows','Compute X-rows']}}
+                                                  'Sink Operators File','Nrows','Compute X-rows']}}
