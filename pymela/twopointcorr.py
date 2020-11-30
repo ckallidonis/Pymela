@@ -50,6 +50,8 @@ class TwoPointCorrelator():
         
         self.getKey = TwoPointKeyGen
 
+        self.dataLoaded = False
+
 
         # Fill in Attributes
         self.Nvec = self.analysisInfo['Nvec']
@@ -139,6 +141,8 @@ class TwoPointCorrelator():
                                         c += 1
                                 # Reading file
                 print('Reading two-point data for momentum %s completed.'%(mTag))
+
+            self.dataLoaded = True
         else:
             raise ValueError('\nUnsupported "Data Source" = %s ' % (dataSource))
     # End getData() -------------
