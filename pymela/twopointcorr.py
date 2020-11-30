@@ -42,15 +42,17 @@ class TwoPointCorrelator():
         self.plainData = {}    # The data that is read/loaded
         self.plainBins = {}    # The Jackknife sampling bins of the plain data
         self.plainMean = {}    # The Jackknife mean of the plain data
-        self.plainNbins = {}   # The number of Jackknife bins for the plain data
 
-
+        self.data = {}     # The averaged data
         self.bins = {}     # The Jackknife sampling bins of the averaged data
         self.mean = {}     # The Jackknife mean of the averaged data
-        self.Nbins = {}    # The number of Jackknife bins for the averaged data
+        
+        self.Nbins = 0     # The number of Jackknife bins for the averaged data
 
         self.covMean = {}  # Average over all attributes but t0, needed for the Covariant Matrix
-        
+
+        self.binsize = self.analysisInfo['Binsize']
+
         self.getKey = TwoPointKeyGen
 
         self.dataLoaded = False
@@ -157,45 +159,52 @@ class TwoPointCorrelator():
         if not self.dataLoaded:
             raise ValueError('Data must be loaded first, before doing Statistical Sampling')
 
-        # Work with the plain Data first
         for mom in self.moms:
             mTag = tags.momString(mom)
             t0List = self.dSetAttr[mTag]['t0']
-            Nrows = self.dSetAttr[mTag]['Nrows']
 
+            Nrows = self.dSetAttr[mTag]['Nrows']
+            Nt0 = len(t0List)
+            Nop = self.dSetAttr[mTag]['Nop']
             Ncfg = self.dSetAttr[mTag]['Ncfg']
             Nt = self.dSetAttr[mTag]['Nt']
 
+            Navg = Nrows + Nt0 + Nop
+
+            # Determine the Jackknife sampling number of Bins
+            self.Nbins = jackknife.Nbins(Ncfg,self.binsize)
+
             self.plainBins[mTag] = {}
             self.plainMean[mTag] = {}
-            self.plainNbins[mTag] = {}
             
+            # That's the averaged data
+            self.data[mTag] = np.zeros((Ncfg,Nt), dtype=np.complex128) 
+
             for iop,opPair in enumerate(self.dSetAttr[mTag]['intOpList']):
                 for it0,t0 in enumerate(t0List):
                     for ir,row in enumerate(range(1,Nrows+1)):
                         dkey = (iop,t0,row)
 
-                        self.plainBins[mTag][dkey] = np.zeros((Ncfg,Nt), dtype=np.complex128)
-                        self.plainMean[mTag][dkey] = np.zeros(Nt, dtype=np.complex128)
+                        # Jackknife sampling on the Plain data
+                        self.plainBins[mTag][dkey] = np.zeros((self.Nbins,Nt), dtype=np.complex128)
                         for t in range(Nt):
-                            self.plainBins[mTag][dkey][:,t], self.plainNbins[mTag][dkey] = jackknife.sampling(self.plainData[mTag][dkey][:,t].real, self.analysisInfo['Binsize'])
+                            self.plainBins[mTag][dkey][:,t] = jackknife.sampling(self.plainData[mTag][dkey][:,t].real, self.Nbins, self.binsize)
 
-                        self.plainMean[mTag][dkey] = jackknife.mean(self.plainBins[mTag][dkey], self.plainNbins[mTag][dkey],Nspl=Nt)
+                        self.plainMean[mTag][dkey] = jackknife.mean(self.plainBins[mTag][dkey], self.Nbins, Nspl=Nt)
 
+                        # Sum over Source-Sink operators, t0's and rows
+                        self.data[mTag] += self.plainData[mTag][dkey]
+
+
+            # Sum over Source-Sink operators, t0's and rows
+            self.data[mTag] = self.data[mTag] / Navg
+
+            # Jackknife sampling over the averaged data, for each momentum
+            self.bins[mTag] = np.zeros((self.Nbins,Nt), dtype=np.complex128)
+            for t in range(Nt):
+                self.bins[mTag][:,t] = jackknife.sampling(self.data[mTag][:,t].real, self.Nbins, self.binsize)
+
+            self.mean[mTag] = jackknife.mean(self.bins[mTag], self.Nbins, Nspl=Nt)
 
         print('Statistical evaluation completed')
     # End doStatistics() -------------
-
-
-
-
-
-
-
-
-
-
-
-
-
-
