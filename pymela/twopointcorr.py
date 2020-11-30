@@ -75,17 +75,16 @@ class TwoPointCorrelator():
 
 
             # Read source-sink operators
-            srcOpFile = dSet['Source Operators File']
-            snkOpFile = dSet['Sink Operators File']
+            intOpFile = dSet['Interpolating Operators File']
             
-            self.dSetAttr[mTag]['srcOpList'] = []
-            self.dSetAttr[mTag]['snkOpList'] = []
+            self.dSetAttr[mTag]['intOpList'] = []
 
-            with open(srcOpFile) as fp:
-                self.dSetAttr[mTag]['srcOpList'].append(fp.readlines()[0].split()[0])                    
+            with open(intOpFile) as fp:
+                ops = fp.readlines()
+                for op in ops:
+                    self.dSetAttr[mTag]['intOpList'].append((op.split()[0],op.split()[1]))
+            self.dSetAttr[mTag]['Nop'] = len(ops)
 
-            with open(snkOpFile) as fp:
-                self.dSetAttr[mTag]['snkOpList'].append(fp.readlines()[0].split()[0])
     # End __init__() -------------
 
     def printInfo(self):
@@ -113,34 +112,35 @@ class TwoPointCorrelator():
 
                 self.plainData[mTag] = {}
                 print('Reading two-point data for momentum %s from files:'%(mTag))
-                for isrc,src in enumerate(self.dSetAttr[mTag]['srcOpList']):
-                    for isnk,snk in enumerate(self.dSetAttr[mTag]['snkOpList']):
-                        for it0,t0 in enumerate(t0List):
-                            t0Tag = tags.t0(t0)
-                            mFTag = tags.momFile(mom)
-                            fileDir = ioForm.getTwoPointDirASCII(self.dataInfo['Data Main Directory'],t0Tag,mFTag)
 
-                            for ir,row in enumerate(range(1,Nrows+1)):
-                                dkey = (isrc,isnk,t0,row)
+                for iop,opPair in enumerate(self.dSetAttr[mTag]['intOpList']):
+                    srcOp,snkOp = opPair[0],opPair[1]
+                    for it0,t0 in enumerate(t0List):
+                        t0Tag = tags.t0(t0)
+                        mFTag = tags.momFile(mom)
+                        fileDir = ioForm.getTwoPointDirASCII(self.dataInfo['Data Main Directory'],t0Tag,mFTag)
 
-                                fileName = ioForm.getTwoPointFileNameASCII(self.phaseTag,t0Tag,src,snk,row,mFTag,self.Nvec)
-                                fileRead = '%s/%s'%(fileDir,fileName)
+                        for ir,row in enumerate(range(1,Nrows+1)):
+                            dkey = (iop,t0,row)
 
-                                print(fileRead)
-                                
-                                self.plainData[mTag][dkey] = np.zeros((Ncfg,Nt), dtype=np.complex128)
-                               
-                                with open(fileRead) as fp:
-                                    line = fp.readlines()
-                                    c = 0
-                                    for n in line:
-                                        it   = c%Nt
-                                        icfg = c//Nt
-                                        self.plainData[mTag][dkey][icfg,it] = complex(np.float64(n.split()[1]),
-                                                                                      np.float64(n.split()[2]))
-                                        c += 1
-                                # Reading file
-                print('Reading two-point data for momentum %s completed.'%(mTag))
+                            fileName = ioForm.getTwoPointFileNameASCII(self.phaseTag,t0Tag,srcOp,snkOp,row,mFTag,self.Nvec)
+                            fileRead = '%s/%s'%(fileDir,fileName)
+
+                            print(fileRead)
+                            
+                            self.plainData[mTag][dkey] = np.zeros((Ncfg,Nt), dtype=np.complex128)
+                            
+                            with open(fileRead) as fp:
+                                line = fp.readlines()
+                                c = 0
+                                for n in line:
+                                    it   = c%Nt
+                                    icfg = c//Nt
+                                    self.plainData[mTag][dkey][icfg,it] = complex(np.float64(n.split()[1]),
+                                                                                    np.float64(n.split()[2]))
+                                    c += 1
+                            
+                print('Reading two-point data for momentum %s completed.\n'%(mTag))
 
             self.dataLoaded = True
         else:
