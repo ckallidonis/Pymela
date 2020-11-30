@@ -58,3 +58,6 @@ c2pt = TwoPointCorrelator(dataInfo = c2pt_dataInfo, analysisInfo = analysisInfo)
 c2pt.printInfo()
 
 c2pt.getData()
+
+# Perform Statistical / Jackknife Analysis
+c2pt.doStatistics()

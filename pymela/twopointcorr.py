@@ -9,6 +9,7 @@ Class definition that holds data and manipulates Two-point correlation functions
 import io.json_io as JSONio
 import io.file_formats as ioForm
 import tools.tag_creators as tags
+import tools.jackknife as jackknife
 
 import numpy as np
 
@@ -41,11 +42,13 @@ class TwoPointCorrelator():
         self.plainData = {}    # The data that is read/loaded
         self.plainBins = {}    # The Jackknife sampling bins of the plain data
         self.plainMean = {}    # The Jackknife mean of the plain data
-        
+        self.plainNbins = {}   # The number of Jackknife bins for the plain data
+
+
         self.bins = {}     # The Jackknife sampling bins of the averaged data
         self.mean = {}     # The Jackknife mean of the averaged data
-        self.stdMean = {}  # The standard mean of the averaged data
-        
+        self.Nbins = {}    # The number of Jackknife bins for the averaged data
+
         self.covMean = {}  # Average over all attributes but t0, needed for the Covariant Matrix
         
         self.getKey = TwoPointKeyGen
@@ -106,15 +109,16 @@ class TwoPointCorrelator():
                 mTag = tags.momString(mom)
                 t0List = self.dSetAttr[mTag]['t0']
                 Nrows = self.dSetAttr[mTag]['Nrows']
+
+                # These are the dimensions of each dataset
                 Ncfg = self.dSetAttr[mTag]['Ncfg']
-                Nt0 = len(t0List)
                 Nt = self.dSetAttr[mTag]['Nt']
 
                 self.plainData[mTag] = {}
                 print('Reading two-point data for momentum %s from files:'%(mTag))
 
                 for iop,opPair in enumerate(self.dSetAttr[mTag]['intOpList']):
-                    srcOp,snkOp = opPair[0],opPair[1]
+                    srcOp,snkOp = opPair
                     for it0,t0 in enumerate(t0List):
                         t0Tag = tags.t0(t0)
                         mFTag = tags.momFile(mom)
@@ -146,3 +150,52 @@ class TwoPointCorrelator():
         else:
             raise ValueError('\nUnsupported "Data Source" = %s ' % (dataSource))
     # End getData() -------------
+
+
+    def doStatistics(self):
+
+        if not self.dataLoaded:
+            raise ValueError('Data must be loaded first, before doing Statistical Sampling')
+
+        # Work with the plain Data first
+        for mom in self.moms:
+            mTag = tags.momString(mom)
+            t0List = self.dSetAttr[mTag]['t0']
+            Nrows = self.dSetAttr[mTag]['Nrows']
+
+            Ncfg = self.dSetAttr[mTag]['Ncfg']
+            Nt = self.dSetAttr[mTag]['Nt']
+
+            self.plainBins[mTag] = {}
+            self.plainMean[mTag] = {}
+            self.plainNbins[mTag] = {}
+            
+            for iop,opPair in enumerate(self.dSetAttr[mTag]['intOpList']):
+                for it0,t0 in enumerate(t0List):
+                    for ir,row in enumerate(range(1,Nrows+1)):
+                        dkey = (iop,t0,row)
+
+                        self.plainBins[mTag][dkey] = np.zeros((Ncfg,Nt), dtype=np.complex128)
+                        self.plainMean[mTag][dkey] = np.zeros(Nt, dtype=np.complex128)
+                        for t in range(Nt):
+                            self.plainBins[mTag][dkey][:,t], self.plainNbins[mTag][dkey] = jackknife.sampling(self.plainData[mTag][dkey][:,t].real, self.analysisInfo['Binsize'])
+
+                        self.plainMean[mTag][dkey] = jackknife.mean(self.plainBins[mTag][dkey], self.plainNbins[mTag][dkey],Nspl=Nt)
+
+
+        print('Statistical evaluation completed')
+    # End doStatistics() -------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
