@@ -8,16 +8,20 @@ This file contains functions related to Jackknife sampling
 
 import numpy as np
 
-def sampling(sample, binsize=1):
+# Define the number of bins
+def Nbins(Ndata, binsize=1):
+    mod   = Ndata%binsize
+    return (Ndata - mod) // binsize # That's always an integer
+#-------------------------------------
+
+def sampling(sample, Nbins, binsize=1):
 
     if len(np.shape(sample)) != 1:
-        raise ValueError('Jackknife only works with 1d samples for now!')
+        raise ValueError('Jackknife sampling: Works only with 1-d samples for now!')
 
     Ndata = len(sample)
-
-    # Define the number of bins
     mod   = Ndata%binsize
-    Nbins = int((Ndata - mod) / binsize)
+
     bins = np.zeros(Nbins,dtype=sample.dtype)
 
     csum = np.sum(sample) # Sum w.r.t to the configurations
@@ -31,15 +35,15 @@ def sampling(sample, binsize=1):
             
         bins[b] = (csum - bsum) / float(Ndata - binsize - mod) # Bin averages for each bin,t
 
-    return bins, Nbins
-
-
-
+    return bins
+#-------------------------------------
 
 def mean(bins,Nbins,Nspl):
 
+    if len(np.shape(bins)) != 2:
+        raise ValueError('Jackknife mean: Supports only 2-d sample arrays for now')
     if np.shape(bins) != (Nbins,Nspl):
-        raise ValueError('The sampled dimension must be the first one in the "bins" array')
+        raise ValueError('Jackknife mean: The sampled dimension must be the first one in the "bins" array')
 
     Jax = 0
     
@@ -59,5 +63,4 @@ def mean(bins,Nbins,Nspl):
             err[i] = np.sqrt(fac*sqsum.real)        
             
     return (ave,err)
-#-------------------------------------------------------
-
+#-------------------------------------
