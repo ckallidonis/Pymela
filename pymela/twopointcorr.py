@@ -40,7 +40,7 @@ class TwoPointCorrelator():
         self.bins = {}     # The Jackknife sampling bins of the averaged data
         self.mean = {}     # The Jackknife mean of the averaged data
         
-        self.Nbins = 0     # The number of Jackknife bins for the averaged data
+        self.Nbins = 0     # The number of Jackknife bins (same for plain and averaged data)
 
         self.covMean = {}  # Average over all attributes but t0, needed for the Covariant Matrix
 
@@ -161,7 +161,7 @@ class TwoPointCorrelator():
             Ncfg = self.dSetAttr[mTag]['Ncfg']
             Nt = self.dSetAttr[mTag]['Nt']
 
-            Navg = Nrows + Nt0 + Nop
+            Navg = Nrows * Nt0 * Nop
 
             # Determine the Jackknife sampling number of Bins
             self.Nbins = jackknife.Nbins(Ncfg,self.binsize)
