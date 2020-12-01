@@ -6,22 +6,15 @@ Copyright (C) 2020. All rights reserved.
 Class definition that holds data and manipulates Two-point correlation functions
 '''
 
-import io.json_io as JSONio
-import io.file_formats as ioForm
-import tools.tag_creators as tags
-import tools.jackknife as jackknife
+import pymela.io.json_io as JSONio
+import pymela.io.file_formats as ioForm
+import pymela.tools.tag_creators as tags
+import pymela.tools.jackknife as jackknife
 
 import numpy as np
+import h5py
 
-def TwoPointKeyGen(mom,t0=None,isrcOp=None,isnkOp=None,iRow=None):
-    mTag = tags.momentum(mom)
-    if t0==None and isrcOp==None and isnkOp==None and iRow==None:
-        return (mTag)
-    else:
-        return (mTag,t0,isrcOp,isnkOp,iRow)
-#-------------------------------
 
-    
 # The class holding the two-point correlation functions
 #
 # Two-point functions have dependence on the following attributes:
@@ -52,8 +45,6 @@ class TwoPointCorrelator():
         self.covMean = {}  # Average over all attributes but t0, needed for the Covariant Matrix
 
         self.binsize = self.analysisInfo['Binsize']
-
-        self.getKey = TwoPointKeyGen
 
         self.dataLoaded = False
 
@@ -187,7 +178,7 @@ class TwoPointCorrelator():
                         dkey = (t0,iop,row)
 
                         # Jackknife sampling on the Plain data
-                        self.plainBins[mTag][dkey] = np.zeros((self.Nbins,Nt), dtype=np.complex128)
+                        self.plainBins[mTag][dkey] = np.zeros((self.Nbins,Nt), dtype=np.float64)
                         for t in range(Nt):
                             self.plainBins[mTag][dkey][:,t] = jackknife.sampling(self.plainData[mTag][dkey][:,t].real, self.Nbins, self.binsize)
 
@@ -201,7 +192,7 @@ class TwoPointCorrelator():
             self.data[mTag] = self.data[mTag] / Navg
 
             # Jackknife sampling over the averaged data, for each momentum
-            self.bins[mTag] = np.zeros((self.Nbins,Nt), dtype=np.complex128)
+            self.bins[mTag] = np.zeros((self.Nbins,Nt), dtype=np.float64)
             for t in range(Nt):
                 self.bins[mTag][:,t] = jackknife.sampling(self.data[mTag][:,t].real, self.Nbins, self.binsize)
 
@@ -209,3 +200,46 @@ class TwoPointCorrelator():
 
         print('Statistical evaluation completed')
     # End doStatistics() -------------
+
+    def writeHDF5(self):
+        h5_file = h5py.File(self.dataInfo['HDF5 Output File'],'w')
+
+        for mom in self.moms:
+            mTag = tags.momString(mom)
+            mh5Tag = tags.momH5(mom)
+            t0List = self.dSetAttr[mTag]['t0']
+            Nrows = self.dSetAttr[mTag]['Nrows']
+
+            # Write the averaged data
+            avg_group = 'avg/%s'%(mh5Tag)
+            dset_name_data = avg_group + '/data'
+            dset_name_bins = avg_group + '/bins'
+            dset_name_mean = avg_group + '/mean'
+
+            dset_bins = h5_file.create_dataset(dset_name_bins, data = self.bins[mTag])
+            dset_data = h5_file.create_dataset(dset_name_data, data = self.data[mTag])
+            dset_mean = h5_file.create_dataset(dset_name_mean, data = self.mean[mTag],dtype='f')
+
+            for it0,t0 in enumerate(t0List):
+                t0Tag = tags.t0(t0)
+
+                for iop,opPair in enumerate(self.dSetAttr[mTag]['intOpList']):
+                    opTag = tags.src_snk(opPair)
+                    for ir,row in enumerate(range(1,Nrows+1)):
+                        rowTag = tags.row(row)
+
+                        dkey = (t0,iop,row)
+
+                        # Write the plain data
+                        plain_group = 'plain/%s/%s/%s/%s'%(mh5Tag,t0Tag,opTag,rowTag)
+                        dset_name_plainData = plain_group + '/data'
+                        dset_name_plainBins = plain_group + '/bins'
+                        dset_name_plainMean = plain_group + '/mean'
+
+                        dset_plainData = h5_file.create_dataset(dset_name_plainData, data = self.plainData[mTag][dkey])
+                        dset_plainBins = h5_file.create_dataset(dset_name_plainBins, data = self.plainBins[mTag][dkey])
+                        dset_plainMean = h5_file.create_dataset(dset_name_plainMean, data = self.plainMean[mTag][dkey],dtype='f')                                
+
+        h5_file.close()
+        print('Two-point function data written in HDF5.')
+    # End writeHDF5() -------------

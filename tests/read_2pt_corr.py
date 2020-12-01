@@ -17,7 +17,7 @@ fileName = __file__.split('/')[-1]
 # Import local modules
 import pymela.io.json_io as JSONio
 import pymela.io.io_conventions as ioConv
-from pymela.twopointcorr import *
+from pymela.twopointcorr import TwoPointCorrelator
 
 runType = '2pt analysis'
 
@@ -61,3 +61,7 @@ c2pt.getData()
 
 # Perform Statistical / Jackknife Analysis
 c2pt.doStatistics()
+
+# Write the output in HDF5 format
+if c2pt_dataInfo['Write HDF5 Output']:
+    c2pt.writeHDF5()
