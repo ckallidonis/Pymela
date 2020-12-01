@@ -109,6 +109,7 @@ class TwoPointCorrelator():
 
             for mom in self.moms:
                 mTag = tags.momString(mom)
+                mFTag = tags.momFile(mom)
                 t0List = self.dSetAttr[mTag]['t0']
                 Nrows = self.dSetAttr[mTag]['Nrows']
 
@@ -119,15 +120,15 @@ class TwoPointCorrelator():
                 self.plainData[mTag] = {}
                 print('Reading two-point data for momentum %s from files:'%(mTag))
 
-                for iop,opPair in enumerate(self.dSetAttr[mTag]['intOpList']):
-                    srcOp,snkOp = opPair
-                    for it0,t0 in enumerate(t0List):
-                        t0Tag = tags.t0(t0)
-                        mFTag = tags.momFile(mom)
-                        fileDir = ioForm.getTwoPointDirASCII(self.dataInfo['Data Main Directory'],t0Tag,mFTag)
+                for it0,t0 in enumerate(t0List):
+                    t0Tag = tags.t0(t0)
+                    fileDir = ioForm.getTwoPointDirASCII(self.dataInfo['Data Main Directory'],t0Tag,mFTag)
+
+                    for iop,opPair in enumerate(self.dSetAttr[mTag]['intOpList']):
+                        srcOp,snkOp = opPair
 
                         for ir,row in enumerate(range(1,Nrows+1)):
-                            dkey = (iop,t0,row)
+                            dkey = (t0,iop,row)
 
                             fileName = ioForm.getTwoPointFileNameASCII(self.phaseTag,t0Tag,srcOp,snkOp,row,mFTag,self.Nvec)
                             fileRead = '%s/%s'%(fileDir,fileName)
@@ -180,10 +181,10 @@ class TwoPointCorrelator():
             # That's the averaged data
             self.data[mTag] = np.zeros((Ncfg,Nt), dtype=np.complex128) 
 
-            for iop,opPair in enumerate(self.dSetAttr[mTag]['intOpList']):
-                for it0,t0 in enumerate(t0List):
+            for it0,t0 in enumerate(t0List):
+                for iop,opPair in enumerate(self.dSetAttr[mTag]['intOpList']):
                     for ir,row in enumerate(range(1,Nrows+1)):
-                        dkey = (iop,t0,row)
+                        dkey = (t0,iop,row)
 
                         # Jackknife sampling on the Plain data
                         self.plainBins[mTag][dkey] = np.zeros((self.Nbins,Nt), dtype=np.complex128)
