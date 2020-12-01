@@ -166,13 +166,18 @@ class TwoPointCorrelator():
             # Determine the Jackknife sampling number of Bins
             self.Nbins = jackknife.Nbins(Ncfg,self.binsize)
 
+            # The plain data Bins and Mean
             self.plainBins[mTag] = {}
             self.plainMean[mTag] = {}
             
             # That's the averaged data
             self.data[mTag] = np.zeros((Ncfg,Nt), dtype=np.complex128) 
 
+            # The mean required for the covariant matrix
+            self.covMean[mTag] = {}
+
             for it0,t0 in enumerate(t0List):
+                covSum = np.zeros((Ncfg,Nt), dtype=np.float64)
                 for iop,opPair in enumerate(self.dSetAttr[mTag]['intOpList']):
                     for ir,row in enumerate(range(1,Nrows+1)):
                         dkey = (t0,iop,row)
@@ -187,6 +192,13 @@ class TwoPointCorrelator():
                         # Sum over Source-Sink operators, t0's and rows
                         self.data[mTag] += self.plainData[mTag][dkey]
 
+                        # Sum over Source-Sink operators and rows
+                        covSum += self.plainData[mTag][dkey].real
+
+                # Standard Mean and Error over source-sink operators and rows, for each t0 (for covariant matrix)
+                covAvg = covSum/(Nop*Nrows) # Still a (Ncfg * Nt) array
+                self.covMean[mTag][t0] = (np.mean(covAvg,axis=0),
+                                          np.std(covAvg,axis=0)/np.sqrt(Ncfg)) 
 
             # Sum over Source-Sink operators, t0's and rows
             self.data[mTag] = self.data[mTag] / Navg
