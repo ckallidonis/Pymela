@@ -9,8 +9,8 @@ Helper functions that create tags used as keys in various objects
 valSgnPN = lambda i: ("+" if i > 0 else "") + str(i)
 valSgnN  = lambda i: ("" if i > 0 else "") + str(i)
 
-def momentum(mom):
-    return 'p.' + '.'.join([str(i) for i in mom])
+def momH5(mom):
+    return 'mom_' + '_'.join([valSgnPN(i) for i in mom])
 
 def momFile(mom):
     return 'momXYZ.' + '.'.join([str(i) for i in mom])
@@ -20,3 +20,9 @@ def momString(mom):
 
 def t0(t0):
     return 't0_%d'%(t0)
+
+def src_snk(opPair):
+    return 'src_snk_%s_%s'%(opPair[0],opPair[1])
+
+def row(row):
+    return 'row_%d'%(row)
