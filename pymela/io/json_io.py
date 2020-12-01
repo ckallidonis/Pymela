@@ -7,7 +7,7 @@ This file contains functions related to I/O
 '''
 
 import json
-import io_conventions as ioConv
+import pymela.io.io_conventions as ioConv
 
 def parse(ini_file):
     with open(ini_file) as f:
