@@ -36,10 +36,14 @@ class TwoPointCorrelator():
         self.plainBins = {}    # The Jackknife sampling bins of the plain data
         self.plainMean = {}    # The Jackknife mean of the plain data
 
-        self.data = {}     # The averaged data
-        self.bins = {}     # The Jackknife sampling bins of the averaged data
-        self.mean = {}     # The Jackknife mean of the averaged data
+        self.avgData = {}     # The averaged data
+        self.avgBins = {}     # The Jackknife sampling bins of the averaged data
+        self.avgMean = {}     # The Jackknife mean of the averaged data
         
+        self.momData = {}     # The momentum-averaged data
+        self.momBins = {}     # The Jackknife sampling bins of the momentum-averaged data
+        self.momMean = {}     # The Jackknife mean of the momentum-averaged data
+
         self.Nbins = 0     # The number of Jackknife bins (same for plain and averaged data)
 
         self.covMean = {}  # Average over all attributes but t0, needed for the Covariant Matrix
@@ -80,6 +84,9 @@ class TwoPointCorrelator():
                 for op in ops:
                     self.dSetAttr[mTag]['intOpList'].append((op.split()[0],op.split()[1]))
             self.dSetAttr[mTag]['Nop'] = len(ops)
+
+        # Get the momenta that will be averaged over
+        self.momAvg = self.dataInfo['Momentum Average']
 
     # End __init__() -------------
 
@@ -171,7 +178,7 @@ class TwoPointCorrelator():
             self.plainMean[mTag] = {}
             
             # That's the averaged data
-            self.data[mTag] = np.zeros((Ncfg,Nt), dtype=np.complex128) 
+            self.avgData[mTag] = np.zeros((Ncfg,Nt), dtype=np.complex128) 
 
             # The mean required for the covariant matrix
             self.covMean[mTag] = {}
@@ -190,7 +197,7 @@ class TwoPointCorrelator():
                         self.plainMean[mTag][dkey] = jackknife.mean(self.plainBins[mTag][dkey], self.Nbins, Nspl=Nt)
 
                         # Sum over Source-Sink operators, t0's and rows
-                        self.data[mTag] += self.plainData[mTag][dkey]
+                        self.avgData[mTag] += self.plainData[mTag][dkey]
 
                         # Sum over Source-Sink operators and rows
                         covSum += self.plainData[mTag][dkey].real
@@ -201,14 +208,44 @@ class TwoPointCorrelator():
                                           np.std(covAvg,axis=0)/np.sqrt(Ncfg)) 
 
             # Sum over Source-Sink operators, t0's and rows
-            self.data[mTag] = self.data[mTag] / Navg
+            self.avgData[mTag] = self.avgData[mTag] / Navg
 
             # Jackknife sampling over the averaged data, for each momentum
-            self.bins[mTag] = np.zeros((self.Nbins,Nt), dtype=np.float64)
+            self.avgBins[mTag] = np.zeros((self.Nbins,Nt), dtype=np.float64)
             for t in range(Nt):
-                self.bins[mTag][:,t] = jackknife.sampling(self.data[mTag][:,t].real, self.Nbins, self.binsize)
+                self.avgBins[mTag][:,t] = jackknife.sampling(self.avgData[mTag][:,t].real, self.Nbins, self.binsize)
 
-            self.mean[mTag] = jackknife.mean(self.bins[mTag], self.Nbins, Nspl=Nt)
+            self.avgMean[mTag] = jackknife.mean(self.avgBins[mTag], self.Nbins, Nspl=Nt)
+
+        
+        # Perform averaging over momentum
+        if self.momAvg:
+            print('Will perform averaging over the momentum')
+
+            for mKey, mVals in self.momAvg.items():
+                Nmom_avg = len(mVals)
+
+                Ncfg = self.dSetAttr[mKey]['Ncfg']
+                Nt = self.dSetAttr[mKey]['Nt']
+
+                self.momData[mKey] = np.zeros((Ncfg,Nt), dtype=np.complex128)
+                self.momBins[mKey] = np.zeros((self.Nbins,Nt), dtype=np.float64)
+                for m in mVals:
+                    mT = tags.momString(m)
+                    # Check that all momentum values that are averaged have the same Ncfg, Nt
+                    if (self.dSetAttr[mT]['Ncfg'] != Ncfg) and (self.dSetAttr[mT]['Nt'] != Nt):
+                        raise ValueError('Momenta must have the same Ncfg and Nt in order to be averaged.')
+
+                    self.momData[mKey] += self.avgData[mT]
+                    self.momBins[mKey] += self.avgBins[mT]
+
+                self.momData[mKey] /= Nmom_avg 
+                self.momBins[mKey] /= Nmom_avg
+
+                self.momMean[mKey] = jackknife.mean(self.momBins[mKey], self.Nbins, Nspl=Nt)
+        else:
+            print('Will not perform averaging over the momentum')
+
 
         print('Statistical evaluation completed')
     # End doStatistics() -------------
@@ -228,12 +265,17 @@ class TwoPointCorrelator():
             dset_name_bins = avg_group + '/bins'
             dset_name_mean = avg_group + '/mean'
 
-            dset_bins = h5_file.create_dataset(dset_name_bins, data = self.bins[mTag])
-            dset_data = h5_file.create_dataset(dset_name_data, data = self.data[mTag])
-            dset_mean = h5_file.create_dataset(dset_name_mean, data = self.mean[mTag],dtype='f')
+            dset_data = h5_file.create_dataset(dset_name_data, data = self.avgData[mTag])
+            dset_bins = h5_file.create_dataset(dset_name_bins, data = self.avgBins[mTag])
+            dset_mean = h5_file.create_dataset(dset_name_mean, data = self.avgMean[mTag],dtype='f')
 
             for it0,t0 in enumerate(t0List):
                 t0Tag = tags.t0(t0)
+
+                # Write cov. matrix mean
+                cov_group = 'cov/%s/%s'%(mh5Tag,t0Tag)
+                dset_name_covMean = cov_group + '/mean'
+                dset_covMean = h5_file.create_dataset(dset_name_covMean, data = self.covMean[mTag][t0],dtype='f')
 
                 for iop,opPair in enumerate(self.dSetAttr[mTag]['intOpList']):
                     opTag = tags.src_snk(opPair)
@@ -251,6 +293,21 @@ class TwoPointCorrelator():
                         dset_plainData = h5_file.create_dataset(dset_name_plainData, data = self.plainData[mTag][dkey])
                         dset_plainBins = h5_file.create_dataset(dset_name_plainBins, data = self.plainBins[mTag][dkey])
                         dset_plainMean = h5_file.create_dataset(dset_name_plainMean, data = self.plainMean[mTag][dkey],dtype='f')                                
+
+
+        # Write the momentum-averaged data
+        for mKey in self.momAvg.keys():
+            mh5Tag = tags.momH5(tags.momVec(mKey))
+
+            momAvg_group = 'momAvg/%s'%(mh5Tag)
+            dset_name_momData = momAvg_group + '/data'
+            dset_name_momBins = momAvg_group + '/bins'
+            dset_name_momMean = momAvg_group + '/mean'
+
+            dset_momData = h5_file.create_dataset(dset_name_momData, data = self.momData[mKey])
+            dset_momBins = h5_file.create_dataset(dset_name_momBins, data = self.momBins[mKey])
+            dset_momMean = h5_file.create_dataset(dset_name_momMean, data = self.momMean[mKey],dtype='f')
+        #--------------------------------
 
         h5_file.close()
         print('Two-point function data written in HDF5.')
