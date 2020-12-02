@@ -9,14 +9,17 @@ Helper functions that create tags used as keys in various objects
 valSgnPN = lambda i: ("+" if i > 0 else "") + str(i)
 valSgnN  = lambda i: ("" if i > 0 else "") + str(i)
 
-def momH5(mom):
-    return 'mom_' + '_'.join([valSgnPN(i) for i in mom])
+def momH5(mom,jc = '_'):
+    return 'mom'+ jc + jc.join([valSgnPN(i) for i in mom])
 
-def momFile(mom):
-    return 'momXYZ.' + '.'.join([str(i) for i in mom])
+def momVec(mStr,sep=','):
+    return [int(i) for i in (mStr.split(sep))]
 
-def momString(mom):
-    return ','.join([valSgnPN(i) for i in mom])
+def momFile(mom,jc= '.'):
+    return 'momXYZ'+ jc + jc.join([str(i) for i in mom])
+
+def momString(mom,sep=','):
+    return sep.join([str(i) for i in mom])
 
 def t0(t0):
     return 't0_%d'%(t0)
