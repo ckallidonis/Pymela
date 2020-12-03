@@ -21,22 +21,29 @@ def dumpDictObject(dictObj,printMessage=''):
     print(json.dumps(dictObj, indent = 2, sort_keys=True))
 #-------------------------------
 
-def makeInputChecks(runType,infoTag,infoDict):
-    if infoTag not in ioConv.inputInfoTags[runType]:
-        raise ValueError('Expected object %s in JSON input file' % (infoTag))
-        
-    for key in ioConv.expectedKeys[infoTag]:
-        if key not in infoDict:
-            raise ValueError('Expected entry "%s" in object "%s" of JSON input file' % (key,infoTag))
+def makeInputChecks(runType, ioDict):
+    for infoTag in ioConv.inputInfoTags[runType]:
+        if infoTag not in ioDict.keys():
+            raise ValueError('Expected object %s in JSON input file' % (infoTag))
 
-        if infoTag in ioConv.expectedSubKeys.keys() and key in ioConv.expectedSubKeys[infoTag].keys():
-            for val in ioConv.expectedSubKeys[infoTag][key]:
-                for subDict in infoDict[key]:
-                    if val not in subDict.keys():
-                        raise ValueError('Expected entry "%s" in sub-object "%s/%s" of JSON input file' % (val,infoTag,key))
+        infoDict = ioDict[infoTag]
 
-    if infoTag == ioConv.c2ptDataInfoTag and infoDict["Write HDF5 Output"]:
-        if "HDF5 Output File" not in infoDict:
-            raise ValueError('Got "Write HDF5 Output"=True, but no file is provided. Please define "HDF5 Output File".')
+        for key in ioConv.expectedKeys[infoTag]:
+            if key not in infoDict:
+                raise ValueError('Expected entry "%s" in object "%s" of JSON input file' % (key,infoTag))
+
+            if infoTag in ioConv.expectedSubKeys.keys() and key in ioConv.expectedSubKeys[infoTag].keys():
+                for val in ioConv.expectedSubKeys[infoTag][key]:
+                    for subDict in infoDict[key]:
+                        if val not in subDict.keys():
+                            raise ValueError('Expected entry "%s" in sub-object "%s/%s" of JSON input file' % (val,infoTag,key))
+
+        if infoTag == ioConv.c2ptDataInfoTag and infoDict["Write HDF5 Output"]:
+            if "HDF5 Output File" not in infoDict:
+                raise ValueError('Got "Write HDF5 Output"=True for %s, but no file is provided. Please define "HDF5 Output File".' %(infoTag))
+
+        if infoTag == ioConv.effEnergyInfoTag and infoDict["Write HDF5 Output"]:
+            if "HDF5 Output File" not in infoDict:
+                raise ValueError('Got "Write HDF5 Output"=True for %s, but no file is provided. Please define "HDF5 Output File".' %(infoTag))
 
 #-------------------------------
