@@ -1,9 +1,9 @@
 '''
-Created on Nov.20, 2020
+Created on Dec.3, 2020
 @author: Christos Kallidonis
 Copyright (C) 2020. All rights reserved.
 
-Simple test that read two-point correlation functions
+Test that computes and writes the Effective Energy
 '''
 
 import sys, os
@@ -18,8 +18,9 @@ fileName = __file__.split('/')[-1]
 import pymela.io.json_io as JSONio
 import pymela.io.io_conventions as ioConv
 from pymela.twopointcorr import TwoPointCorrelator
+from pymela.effenergy import EffectiveEnergy
 
-runType = '2pt analysis'
+runType = 'Effective Energy Analysis'
 
 # Avoid writing the compiled files
 sys.dont_write_bytecode = True
@@ -46,21 +47,32 @@ JSONio.dumpDictObject(ioDict,'\n%s - Got the following Input:' %(fileName))
 # Make cheks on Input data
 JSONio.makeInputChecks(runType, ioDict)
 
-
 c2pt_dataInfo = ioDict[ioConv.c2ptDataInfoTag]
-analysisInfo = ioDict[ioConv.analysisInfoTag]
-ensembleInfo = ioDict[ioConv.ensembleInfoTag]
+analysisInfo  = ioDict[ioConv.analysisInfoTag]
+ensembleInfo  = ioDict[ioConv.ensembleInfoTag]
+effEnergyInfo = ioDict[ioConv.effEnergyInfoTag]
 
 
-
+# Two-point correlator analysis
 c2pt = TwoPointCorrelator(dataInfo = c2pt_dataInfo, analysisInfo = analysisInfo)
 c2pt.printInfo()
 
 c2pt.getData()
 
-# Perform Statistical / Jackknife Analysis
+# Perform Statistical / Jackknife Analysis on the Two-point functions
 c2pt.doStatistics()
 
 # Write the output in HDF5 format
 if c2pt_dataInfo['Write HDF5 Output']:
     c2pt.writeHDF5()
+#-----------------------------------------------
+
+
+# Effective Energy Calculation
+effEnergy = EffectiveEnergy(c2pt, effEnergyInfo)
+
+effEnergy.compute()
+
+# Write the output in HDF5 format
+if effEnergyInfo['Write HDF5 Output']:
+    effEnergy.writeHDF5()

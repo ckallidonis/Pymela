@@ -12,14 +12,17 @@ If these conventions are modified, they are also modified just once within the P
 analysisInfoTag = 'Analysis Info'
 c2ptDataInfoTag = '2pt Data Info'
 ensembleInfoTag = 'Ensemble Info'
+effEnergyInfoTag = 'Effective Energy Info'
 
 # What is expected in the JSON input file, based on the type of run/test
-inputInfoTags = {'2pt analysis': [analysisInfoTag, c2ptDataInfoTag, ensembleInfoTag]}
+inputInfoTags = {'2pt analysis': [analysisInfoTag, c2ptDataInfoTag, ensembleInfoTag],
+                 'Effective Energy Analysis': [analysisInfoTag, c2ptDataInfoTag, ensembleInfoTag, effEnergyInfoTag]}
 
 # What is expected in each object of the JSON input file
 expectedKeys = {c2ptDataInfoTag:  ['Data Main Directory', 'Datasets', 'Data Source', "Write HDF5 Output", "Momentum Average"],
                  analysisInfoTag: ['Phasing Tag', 'Nvec', 'Binsize'],
-                 ensembleInfoTag: ['Tag', 'L', 'T', 'alat fm', 'mpi GeV', 'mN GeV']}
+                 ensembleInfoTag: ['Tag', 'L', 'T', 'alat fm', 'mpi GeV', 'mN GeV'],
+                 effEnergyInfoTag: ["Write HDF5 Output"]}
 
 expectedSubKeys = {c2ptDataInfoTag: {'Datasets': ['mom', 'Ncfg', 't0','Nt','Interpolating Operators File',
                                                   'Nrows','Compute X-rows']}}
