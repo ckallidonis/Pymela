@@ -44,8 +44,7 @@ ioDict = JSONio.parse(input_file)
 JSONio.dumpDictObject(ioDict,'\n%s - Got the following Input:' %(fileName))
 
 # Make cheks on Input data
-for infoTag, infoDict in ioDict.items():
-    JSONio.makeInputChecks(runType,infoTag, infoDict)
+JSONio.makeInputChecks(runType, ioDict)
 
 
 c2pt_dataInfo = ioDict[ioConv.c2ptDataInfoTag]
