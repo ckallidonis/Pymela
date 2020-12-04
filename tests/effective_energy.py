@@ -73,6 +73,12 @@ effEnergy = EffectiveEnergy(c2pt, effEnergyInfo)
 
 effEnergy.compute()
 
+effEnergy.performFits()
+
+print('Effective Energy Fit Constant Fit Results:')
+print('Values :', effEnergy.fitMean['Constant'])
+print('Chi^2  :', effEnergy.chiMean['Constant'])
+print('Nbinfit:', effEnergy.Nbinfit['Constant'])
+
 # Write the output in HDF5 format
-if effEnergyInfo['Write HDF5 Output']:
-    effEnergy.writeHDF5()
+effEnergy.writeHDF5()

@@ -10,6 +10,7 @@ import pymela.io.json_io as JSONio
 import pymela.io.file_formats as ioForm
 import pymela.tools.tag_creators as tags
 import pymela.tools.jackknife as jackknife
+import pymela.fit.constant_fit as constFit
 
 import numpy as np
 import h5py
@@ -25,6 +26,7 @@ class EffectiveEnergy():
         self.c2pt = c2pt
 
         self.dataInfo = dataInfo
+        self.fitInfo = self.dataInfo["Fitting"]
 
         # Data containers
         # "plain" means not averaged over t0,src-snk operators, rows, or momentum, i.e. there's depedence on these attributes
@@ -37,6 +39,12 @@ class EffectiveEnergy():
         self.momBins = {}     # The Jackknife sampling bins of the momentum-averaged data
         self.momMean = {}     # The Jackknife mean of the momentum-averaged data
 
+        # Fit data
+        self.fitBins = {}
+        self.fitMean = {}
+        self.chiBins = {}
+        self.chiMean = {}
+        self.Nbinfit = {}
 
         # Get attributes from the two-point correlator
         self.Nbins = self.c2pt.Nbins  # The number of Jackknife bins (same for plain and averaged data)
@@ -92,6 +100,53 @@ class EffectiveEnergy():
 
         print('Effective Energy computed.')
     # End compute() -------------
+
+    def performFits(self):
+        
+        for fitSeq in self.fitInfo:
+            fType = fitSeq['Type']
+            if fType != 'Constant':
+                print('Effective Energy: Supports only Constant fits for now!')
+            print('Performing %s Fits on the Effective Energy...'%(fType))
+
+            self.fitBins[fType] = {}
+            self.fitMean[fType] = {}
+            self.chiBins[fType] = {}
+            self.chiMean[fType] = {}
+            self.Nbinfit[fType] = {}
+
+
+            momFit = fitSeq['Ranges'].keys()
+            for mTag in fitSeq['Ranges'].keys():
+                tini,tfin = fitSeq['Ranges'][mTag]
+                tFit = np.arange(tini,tfin+1)
+
+                Nf = 0
+                self.fitBins[fType][mTag] = np.zeros(self.Nbins,dtype=np.float64)
+                self.chiBins[fType][mTag] = np.zeros(self.Nbins,dtype=np.float64)
+                for b in range(self.Nbins):
+                    data = self.momBins[mTag][b,tini:tfin+1]
+                    err  = self.momMean[mTag][1][tini:tfin+1]
+                    if not np.isnan(data).any():
+                        if fType == 'Constant':
+                            self.fitBins[fType][mTag][Nf] = constFit.fit(data,err)
+                            self.chiBins[fType][mTag][Nf] = constFit.chiSquare(data,err,self.fitBins[fType][mTag][Nf])
+                        Nf += 1
+                self.fitBins[fType][mTag] = self.fitBins[fType][mTag][:Nf]
+                self.chiBins[fType][mTag] = self.chiBins[fType][mTag][:Nf]
+                self.Nbinfit[fType][mTag] = Nf
+
+                # Disregard the fit if there's only one, or no successfull fits within the JK bins
+                if np.shape(self.fitBins[fType][mTag])==(0,) or np.shape(self.fitBins[fType][mTag])==(1,):
+                    self.fitMean[fType][mTag] = (None,None)
+                    self.chiMean[fType][mTag] = (None,None)
+                else:
+                    self.fitMean[fType][mTag] = jackknife.mean(self.fitBins[fType][mTag], Nbins = Nf, Nspl=1)
+                    self.chiMean[fType][mTag] = jackknife.mean(self.chiBins[fType][mTag], Nbins = Nf, Nspl=1)
+
+                print("Momentum %s Done"%(mTag))
+    # End performFits() -------------
+
 
     def writeHDF5(self):
         h5_file = h5py.File(self.dataInfo['HDF5 Output File'],'w')
