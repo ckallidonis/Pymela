@@ -42,8 +42,4 @@ def makeInputChecks(runType, ioDict):
             if "HDF5 Output File" not in infoDict:
                 raise ValueError('Got "Write HDF5 Output"=True for %s, but no file is provided. Please define "HDF5 Output File".' %(infoTag))
 
-        if infoTag == ioConv.effEnergyInfoTag and infoDict["Write HDF5 Output"]:
-            if "HDF5 Output File" not in infoDict:
-                raise ValueError('Got "Write HDF5 Output"=True for %s, but no file is provided. Please define "HDF5 Output File".' %(infoTag))
-
 #-------------------------------

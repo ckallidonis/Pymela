@@ -22,7 +22,10 @@ inputInfoTags = {'2pt analysis': [analysisInfoTag, c2ptDataInfoTag, ensembleInfo
 expectedKeys = {c2ptDataInfoTag:  ['Data Main Directory', 'Datasets', 'Data Source', "Write HDF5 Output", "Momentum Average"],
                  analysisInfoTag: ['Phasing Tag', 'Nvec', 'Binsize'],
                  ensembleInfoTag: ['Tag', 'L', 'T', 'alat fm', 'mpi GeV', 'mN GeV'],
-                 effEnergyInfoTag: ["Write HDF5 Output"]}
+                 effEnergyInfoTag: ["HDF5 Output File", "Fitting"]}
 
 expectedSubKeys = {c2ptDataInfoTag: {'Datasets': ['mom', 'Ncfg', 't0','Nt','Interpolating Operators File',
-                                                  'Nrows','Compute X-rows']}}
+                                                  'Nrows','Compute X-rows']
+                                    },
+                   effEnergyInfoTag: {'Fitting': ['Type', 'Ranges']}
+                  }
