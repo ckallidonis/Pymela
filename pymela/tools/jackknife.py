@@ -40,11 +40,8 @@ def sampling(sample, Nbins, binsize=1):
 
 def mean(bins,Nbins,Nspl):
 
-    if len(np.shape(bins)) != 2:
-        raise ValueError('Jackknife mean: Supports only 2-d sample arrays for now')
-    if np.shape(bins) != (Nbins,Nspl):
+    if np.shape(bins)[0] != Nbins:
         raise ValueError('Jackknife mean: The sampled dimension must be the first one in the "bins" array')
-
     Jax = 0
     
     if(Nspl==1):
