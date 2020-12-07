@@ -262,10 +262,15 @@ class ThreePointCorrelator():
         # Perform average over momenta and z3 values
         for mom in self.momAvg:
             mTag = tags.momString(mom)
-            tsepList = self.dSetAttr[mTag]['tsep']
-            dispList = self.dSetAttr[mTag]['disp']
-            dispListAvg = self.dispAvg[mTag]
-            Ncfg = self.dSetAttr[mTag]['Ncfg']
+
+            mTagD = tags.momString(mom)
+            if mTag not in self.dSetAttr.keys():
+                mTagD = tags.momString([mom[0],mom[1],-mom[2]])
+
+            tsepList = self.dSetAttr[mTagD]['tsep']
+            dispList = self.dSetAttr[mTagD]['disp']
+            dispListAvg = self.dispAvg[mTagD]
+            Ncfg = self.dSetAttr[mTagD]['Ncfg']
 
             for ri in self.RI:
                 self.data[ri][mTag] = {}
@@ -274,7 +279,7 @@ class ThreePointCorrelator():
 
             for tsep in tsepList:
                 Nt = tsep
-                for gamma in self.dSetAttr[mTag]['gamma']:
+                for gamma in self.dSetAttr[mTagD]['gamma']:
                     for z3 in dispListAvg: # Run over the z3>=0
                         dkey = (tsep,z3,gamma)
 
@@ -377,14 +382,20 @@ class ThreePointCorrelator():
         for mom in self.momAvg:
             mTag = tags.momString(mom)
             mh5Tag = tags.momH5(mom)
-            tsepList = self.dSetAttr[mTag]['tsep']
+
+            mTagD = tags.momString(mom)
+            if mTag not in self.dSetAttr.keys():
+                mTagD = tags.momString([mom[0],mom[1],-mom[2]])
+
+
+            tsepList = self.dSetAttr[mTagD]['tsep']
             dispListAvg = self.dispAvg[mTag]
 
             for z3 in dispListAvg:
                 dispTag = tags.disp(z3)
                 for tsep in tsepList:
                     tsepTag = tags.tsep(tsep)
-                    for gamma in self.dSetAttr[mTag]['gamma']:
+                    for gamma in self.dSetAttr[mTagD]['gamma']:
                         insTag = tags.insertion(gamma)
                         dkeyAvg = (tsep,z3,gamma)
 
