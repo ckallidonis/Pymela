@@ -19,3 +19,20 @@ def getTwoPointFileNameASCII(phM,t0Tag,src,snk,srow,mFTag,nvec):
 
 def getTwoPointDirASCII(mainDir,t0Tag,mFTag):
         return '%s/%s/%s' % (mainDir,t0Tag,mFTag)
+#--------------------------
+
+def getThreePointDirASCII(mainDir,t0Tag,tsepTag,mFTag):
+    return '%s/%s/%s/%s' % (mainDir,t0Tag,mFTag,tsepTag)
+#--------------------------
+
+def getThreePointFileNameASCII(phM,t0Tag,tsepTag,srcOp,snkOp,row,insOp,insRow,mFTag,dispTag,nvec):
+    filePre = 'corr_3pt.baryon.n%d'%(nvec)
+
+    srcTag = 'src_%s_%d'%(srcOp,row)
+    snkTag = 'snk_%s_%d'%(snkOp,row)
+    insTag = 'ins_%s_%d'%(insOp,insRow)
+
+    FileName = '%s.%s.%s.%s.%s.%s.%s.%s.%s.dat'%(filePre,phM,t0Tag,tsepTag,srcTag,snkTag,insTag,dispTag,mFTag)
+
+    return FileName
+#--------------------------
