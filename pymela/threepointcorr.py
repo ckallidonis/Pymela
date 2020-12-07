@@ -298,7 +298,7 @@ class ThreePointCorrelator():
                                 mTagNeg = tags.momString(momNeg)
                                 if z3 == 0: # Pz!=0, z3=0
                                     self.data['Re'][mTag][dkey] = 0.5 * (self.avgData['Re'][mTagPos][dkey] + self.avgData['Re'][mTagNeg][dkey])
-                                    self.data['Im'][mTag][dkey] = 0.5 * (self.avgData['Im'][mTagPos][dkey] - self.avgData['Im'][mTagNeg][dkey])                             
+                                    self.data['Im'][mTag][dkey] = 0.5 * (self.avgData['Im'][mTagPos][dkey] - self.avgData['Im'][mTagNeg][dkey])
                                 else: # Pz!=0, z3!=0
                                     if z3 in dispList and -z3 in dispList:
                                         dkeyAvgPosZ = (tsep, z3,gamma)
@@ -329,7 +329,6 @@ class ThreePointCorrelator():
                                         raise ValueError('\n Error: Inconsistency with z3 values!!!')
                             elif mom in self.moms and momNeg not in self.moms:
                                 mTagPos = mTag
-                                mTagNeg = None # Guard
                                 if z3 == 0 or not (z3 in dispList and -z3 in dispList): # Pz!=0, z3=0
                                     dkeyAvg = (tsep,-z3,gamma) if -z3 in dispList else (tsep,z3,gamma)
                                     for ri in self.RI:
@@ -344,7 +343,6 @@ class ThreePointCorrelator():
                                     self.data['Im'][mTag][dkey] = 0.5 * (self.avgData['Im'][mTagPos][dkeyAvgPosZ] -
                                                                          self.avgData['Im'][mTagPos][dkeyAvgNegZ])
                             elif momNeg in self.moms and mom not in self.moms:
-                                mTagPos = None
                                 mTagNeg = tags.momString(momNeg)
                                 if z3 == 0 or not (z3 in dispList and -z3 in dispList): # Pz!=0, z3=0
                                     dkeyAvg = (tsep,-z3,gamma) if -z3 in dispList else (tsep,z3,gamma)
@@ -372,6 +370,71 @@ class ThreePointCorrelator():
 
             print('Averaging over z3 and momenta for momentum %s completed.'%(mTag))
 
+    def writeHDF5(self):
+        h5_file = h5py.File(self.dataInfo['HDF5 Output File'],'w')
+
+        # Write the Pz- and z3-averaged data
+        for mom in self.momAvg:
+            mTag = tags.momString(mom)
+            mh5Tag = tags.momH5(mom)
+            tsepList = self.dSetAttr[mTag]['tsep']
+            dispListAvg = self.dispAvg[mTag]
+
+            for z3 in dispListAvg:
+                dispTag = tags.disp(z3)
+                for tsep in tsepList:
+                    tsepTag = tags.tsep(tsep)
+                    for gamma in self.dSetAttr[mTag]['gamma']:
+                        insTag = tags.insertion(gamma)
+                        dkeyAvg = (tsep,z3,gamma)
+
+                        # Write the averaged data
+                        for ri in self.RI:
+                            avg_group = 'avg/%s/%s/%s/%s/%s'%(mh5Tag,tsepTag,dispTag,insTag,ri)
+                            dset_name_data = avg_group + '/data'
+                            dset_name_bins = avg_group + '/bins'
+                            dset_name_mean = avg_group + '/mean'
+                            h5_file.create_dataset(dset_name_data, data = self.data[ri][mTag][dkeyAvg])
+                            h5_file.create_dataset(dset_name_bins, data = self.bins[ri][mTag][dkeyAvg])
+                            h5_file.create_dataset(dset_name_mean, data = self.mean[ri][mTag][dkeyAvg],dtype='f')
+        #--------------------------------------
+
+        for mom in self.moms:
+            mTag = tags.momString(mom)
+            mh5Tag = tags.momH5(mom)
+            t0List = self.dSetAttr[mTag]['t0']
+            tsepList = self.dSetAttr[mTag]['tsep']
+            dispList = self.dSetAttr[mTag]['disp']
+            Nrows = self.dSetAttr[mTag]['Nrows']
+
+            for z3 in dispList:
+                dispTag = tags.disp(z3)
+                for tsep in tsepList:
+                    tsepTag = tags.tsep(tsep)
+                    for t0 in t0List:
+                        t0Tag = tags.t0(t0)
+                        for iop,opPair in enumerate(self.dSetAttr[mTag]['intOpList']):
+                            opTag = tags.src_snk(opPair)
+                            for row in range(1,Nrows+1):
+                                rowTag = tags.row(row)
+                                for gamma in self.dSetAttr[mTag]['gamma']:
+                                    insTag = tags.insertion(gamma)
+                                    dkey = (tsep,t0,z3,iop,row,gamma)
+
+                                    # Write the plain data
+                                    for ri in self.RI:
+                                        plain_group = 'plain/%s/%s/%s/%s/%s/%s/%s/%s'%(mh5Tag,dispTag,tsepTag,t0Tag,opTag,rowTag,insTag,ri)
+                                        dset_name_plainData = plain_group + '/data'
+                                        dset_name_plainBins = plain_group + '/bins'
+                                        dset_name_plainMean = plain_group + '/mean'
+
+                                        h5_file.create_dataset(dset_name_plainData, data = self.plainData[ri][mTag][dkey])
+                                        h5_file.create_dataset(dset_name_plainBins, data = self.plainBins[ri][mTag][dkey])
+                                        h5_file.create_dataset(dset_name_plainMean, data = self.plainMean[ri][mTag][dkey],dtype='f')                                
+        #--------------------------------------
+
+        h5_file.close()
+        print('Three-point function data written in HDF5.')
 
 
 
