@@ -59,7 +59,7 @@ c3pt.printInfo()
 c3pt.getData()
 
 # Perform Statistical / Jackknife Analysis
-#c3pt.doStatistics()
+c3pt.doStatistics()
 
 # Write the output in HDF5 format
 #if c3pt_dataInfo['Write HDF5 Output']:

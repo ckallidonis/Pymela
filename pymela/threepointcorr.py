@@ -38,17 +38,23 @@ class ThreePointCorrelator():
         #   The three-point function also has a significant real and imaginary part
         self.RI = ['Re','Im']
 
-        # Data containers
+        # Data containers        
+        # The data that is read/loaded
         # "plain" means not averaged over t0,src-snk operators, rows, or momentum, i.e. there's depedence on these attributes
-        self.plainData = {}    # The data that is read/loaded
-        self.plainBins = {}    # The Jackknife sampling bins of the plain data
-        self.plainMean = {}    # The Jackknife mean of the plain data
-        self.avgData = {}     # The averaged data
-        self.avgBins = {}     # The Jackknife sampling bins of the averaged data
-        self.avgMean = {}     # The Jackknife mean of the averaged data       
-        self.momData = {}     # The momentum-averaged data
-        self.momBins = {}     # The Jackknife sampling bins of the momentum-averaged data
-        self.momMean = {}     # The Jackknife mean of the momentum-averaged data
+        self.plainData = {}   
+        self.plainBins = {}
+        self.plainMean = {}
+
+        # The averaged data over t0, src-snk operators and rows
+        self.avgData = {}
+        self.avgBins = {}
+        self.avgMean = {}
+
+        # The momentum- and z3-averaged data, that will be used throughout the analysis
+        self.data = {}
+        self.bins = {}
+        self.mean = {}
+
         for ri in self.RI:
             self.plainData[ri] = {}
             self.plainBins[ri] = {}
@@ -56,12 +62,12 @@ class ThreePointCorrelator():
             self.avgData[ri] = {}
             self.avgBins[ri] = {}
             self.avgMean[ri] = {}
-            self.momData[ri] = {}
-            self.momBins[ri] = {}
-            self.momMean[ri] = {}
+            self.data[ri] = {}
+            self.bins[ri] = {}
+            self.mean[ri] = {}
 
-        self.Nbins = 0     # The number of Jackknife bins (same for plain and averaged data)
-
+        # The number of Jackknife bins, and the binsize (same for plain and averaged data)
+        self.Nbins = 0     
         self.binsize = self.analysisInfo['Binsize']
 
         self.dataLoaded = False
@@ -126,6 +132,9 @@ class ThreePointCorrelator():
                 Nrows = self.dSetAttr[mTag]['Nrows']
                 Ncfg = self.dSetAttr[mTag]['Ncfg']
 
+                # Determine the Jackknife sampling number of Bins
+                self.Nbins = jackknife.Nbins(Ncfg,self.binsize)
+
                 for ri in self.RI:
                     self.plainData[ri][mTag] = {}
 
@@ -174,3 +183,66 @@ class ThreePointCorrelator():
         else:
             raise ValueError('\nUnsupported "Data Source" = %s ' % (dataSource))
     # End getData() -------------
+
+
+    def doStatistics(self):
+
+        if not self.dataLoaded:
+            raise ValueError('Data must be loaded first, before doing Statistical Sampling')
+
+        for mom in self.moms:
+            mTag = tags.momString(mom)
+            t0List = self.dSetAttr[mTag]['t0']
+            tsepList = self.dSetAttr[mTag]['tsep']
+            dispList = self.dSetAttr[mTag]['disp']
+            Nrows = self.dSetAttr[mTag]['Nrows']
+            Ncfg = self.dSetAttr[mTag]['Ncfg']
+            Nt0 = len(t0List)
+            Nop = self.dSetAttr[mTag]['Nop']
+
+            Navg = Nrows * Nt0 * Nop
+
+            # The plain data Bins and Mean
+            for ri in self.RI:
+                self.plainBins[ri][mTag] = {}
+                self.plainMean[ri][mTag] = {}
+                self.avgData[ri][mTag] = {}
+                self.avgBins[ri][mTag] = {}
+                self.avgMean[ri][mTag] = {}
+
+            for tsep in tsepList:
+                Nt = tsep
+                for z3 in dispList:
+                    for gamma in self.dSetAttr[mTag]['gamma']:
+                        dkeyAvg = (tsep,z3,gamma)
+                        for ri in self.RI:
+                            self.avgData[ri][mTag][dkeyAvg] = np.zeros((Ncfg,Nt),dtype=np.float64)
+
+                        for t0 in t0List:
+                            for iop,opPair in enumerate(self.dSetAttr[mTag]['intOpList']):
+                                for row in range(1,Nrows+1):
+                                    dkey = (tsep,t0,z3,iop,row,gamma)
+
+                                    for ri in self.RI:
+                                        # Jackknife sampling on the Plain data
+                                        self.plainBins[ri][mTag][dkey] = np.zeros((self.Nbins,Nt), dtype=np.float64)
+                                        for t in range(Nt):
+                                            self.plainBins[ri][mTag][dkey][:,t] = jackknife.sampling(self.plainData[ri][mTag][dkey][:,t], self.Nbins, self.binsize)
+                                        self.plainMean[ri][mTag][dkey] = jackknife.mean(self.plainBins[ri][mTag][dkey], self.Nbins, Nspl=Nt)
+
+                                        # Average over Source-Sink operators, t0's and rows
+                                        self.avgData[ri][mTag][dkeyAvg] += self.plainData[ri][mTag][dkey]
+
+                        # Average over Source-Sink operators, t0's and rows
+                        for ri in self.RI:
+                            self.avgData[ri][mTag][dkeyAvg] = self.avgData[ri][mTag][dkeyAvg] / Navg
+
+                            # Jackknife sampling over the averaged data, for each momentum, tsep, z3 and gamma
+                            self.avgBins[ri][mTag][dkeyAvg] = np.zeros((self.Nbins,Nt), dtype=np.float64)
+                            for t in range(Nt):
+                                self.avgBins[ri][mTag][dkeyAvg][:,t] = jackknife.sampling(self.avgData[ri][mTag][dkeyAvg][:,t],
+                                                                                          self.Nbins, self.binsize)
+                            self.avgMean[ri][mTag][dkeyAvg] = jackknife.mean(self.avgBins[ri][mTag][dkeyAvg],
+                                                                             self.Nbins, Nspl=Nt)
+
+            print('\nJackknife analysis for momentum %s completed'%(mTag))
