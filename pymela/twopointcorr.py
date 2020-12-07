@@ -183,10 +183,10 @@ class TwoPointCorrelator():
             # The mean required for the covariant matrix
             self.covMean[mTag] = {}
 
-            for it0,t0 in enumerate(t0List):
+            for t0 in t0List:
                 covSum = np.zeros((Ncfg,Nt), dtype=np.float64)
                 for iop,opPair in enumerate(self.dSetAttr[mTag]['intOpList']):
-                    for ir,row in enumerate(range(1,Nrows+1)):
+                    for row in range(1,Nrows+1):
                         dkey = (t0,iop,row)
 
                         # Jackknife sampling on the Plain data
