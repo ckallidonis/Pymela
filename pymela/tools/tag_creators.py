@@ -24,8 +24,15 @@ def momString(mom,sep=','):
 def t0(t0):
     return 't0_%d'%(t0)
 
+def tsep(tsep):
+    return 'tsnk_%d'%(tsep)
+
 def src_snk(opPair):
     return 'src_snk_%s_%s'%(opPair[0],opPair[1])
 
 def row(row):
     return 'row_%d'%(row)
+
+def disp(z3):
+    dL = lambda i: ("z" if i != 0 else "") + ("+" if i > 0 else "") + str(i)
+    return 'disp_%s'%(dL(z3))

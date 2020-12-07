@@ -115,8 +115,6 @@ class EffectiveEnergy():
             self.chiMean[fType] = {}
             self.Nbinfit[fType] = {}
 
-
-            momFit = fitSeq['Ranges'].keys()
             for mTag in fitSeq['Ranges'].keys():
                 tini,tfin = fitSeq['Ranges'][mTag]
                 tFit = np.arange(tini,tfin+1)
@@ -158,7 +156,7 @@ class EffectiveEnergy():
             Nrows = self.dSetAttr[mTag]['Nrows']
 
             # Write the averaged data
-            avg_group = 'avg/%s'%(mh5Tag)
+            avg_group = 'data/avg/%s'%(mh5Tag)
             dset_name_bins = avg_group + '/bins'
             dset_name_mean = avg_group + '/mean'
 
@@ -176,25 +174,43 @@ class EffectiveEnergy():
                         dkey = (t0,iop,row)
 
                         # Write the plain data
-                        plain_group = 'plain/%s/%s/%s/%s'%(mh5Tag,t0Tag,opTag,rowTag)
+                        plain_group = 'data/plain/%s/%s/%s/%s'%(mh5Tag,t0Tag,opTag,rowTag)
                         dset_name_plainBins = plain_group + '/bins'
                         dset_name_plainMean = plain_group + '/mean'
 
                         dset_plainBins = h5_file.create_dataset(dset_name_plainBins, data = self.plainBins[mTag][dkey])
                         dset_plainMean = h5_file.create_dataset(dset_name_plainMean, data = self.plainMean[mTag][dkey],dtype='f')                                
-
+        #--------------------------------
 
         # Write the momentum-averaged data
         for mKey in self.momAvg.keys():
             mh5Tag = tags.momH5(tags.momVec(mKey))
 
-            momAvg_group = 'momAvg/%s'%(mh5Tag)
+            momAvg_group = 'data/momAvg/%s'%(mh5Tag)
             dset_name_momBins = momAvg_group + '/bins'
             dset_name_momMean = momAvg_group + '/mean'
 
             dset_momBins = h5_file.create_dataset(dset_name_momBins, data = self.momBins[mKey])
             dset_momMean = h5_file.create_dataset(dset_name_momMean, data = self.momMean[mKey],dtype='f')
         #--------------------------------
+
+        # Write the Fit data
+        for fitSeq in self.fitInfo:
+            fType = fitSeq['Type']
+
+            for mTag in fitSeq['Ranges'].keys():
+                mh5Tag = tags.momH5(tags.momVec(mTag))
+
+                fit_group = 'fits/%s/momAvg/%s'%(fType,mh5Tag)
+                dset_name_fitBins = fit_group + '/bins'
+                dset_name_fitMean = fit_group + '/mean'
+                dset_name_chiMean = fit_group + '/chiSquare'
+
+                dset_fitBins = h5_file.create_dataset(dset_name_fitBins, data = self.fitBins[fType][mTag])
+                dset_fitMean = h5_file.create_dataset(dset_name_fitMean, data = self.fitMean[fType][mTag],dtype='f')
+                dset_chiMean = h5_file.create_dataset(dset_name_chiMean, data = self.chiMean[fType][mTag],dtype='f')
+        #--------------------------------
+
 
         h5_file.close()
         print('Effective Energy data written in HDF5.')
