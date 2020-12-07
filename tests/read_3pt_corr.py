@@ -62,5 +62,5 @@ c3pt.getData()
 c3pt.doStatistics()
 
 # Write the output in HDF5 format
-#if c3pt_dataInfo['Write HDF5 Output']:
-#    c3pt.writeHDF5()
+if c3pt_dataInfo['Write HDF5 Output']:
+   c3pt.writeHDF5()
