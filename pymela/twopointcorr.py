@@ -118,14 +118,14 @@ class TwoPointCorrelator():
                 self.plainData[mTag] = {}
                 print('Reading two-point data for momentum %s from files:'%(mTag))
 
-                for it0,t0 in enumerate(t0List):
+                for t0 in t0List:
                     t0Tag = tags.t0(t0)
                     fileDir = ioForm.getTwoPointDirASCII(self.dataInfo['Data Main Directory'],t0Tag,mFTag)
 
                     for iop,opPair in enumerate(self.dSetAttr[mTag]['intOpList']):
                         srcOp,snkOp = opPair
 
-                        for ir,row in enumerate(range(1,Nrows+1)):
+                        for row in range(1,Nrows+1):
                             dkey = (t0,iop,row)
 
                             fileName = ioForm.getTwoPointFileNameASCII(self.phaseTag,t0Tag,srcOp,snkOp,row,mFTag,self.Nvec)
@@ -265,21 +265,21 @@ class TwoPointCorrelator():
             dset_name_bins = avg_group + '/bins'
             dset_name_mean = avg_group + '/mean'
 
-            dset_data = h5_file.create_dataset(dset_name_data, data = self.avgData[mTag])
-            dset_bins = h5_file.create_dataset(dset_name_bins, data = self.avgBins[mTag])
-            dset_mean = h5_file.create_dataset(dset_name_mean, data = self.avgMean[mTag],dtype='f')
+            h5_file.create_dataset(dset_name_data, data = self.avgData[mTag])
+            h5_file.create_dataset(dset_name_bins, data = self.avgBins[mTag])
+            h5_file.create_dataset(dset_name_mean, data = self.avgMean[mTag],dtype='f')
 
-            for it0,t0 in enumerate(t0List):
+            for t0 in t0List:
                 t0Tag = tags.t0(t0)
 
                 # Write cov. matrix mean
                 cov_group = 'cov/%s/%s'%(mh5Tag,t0Tag)
                 dset_name_covMean = cov_group + '/mean'
-                dset_covMean = h5_file.create_dataset(dset_name_covMean, data = self.covMean[mTag][t0],dtype='f')
+                h5_file.create_dataset(dset_name_covMean, data = self.covMean[mTag][t0],dtype='f')
 
                 for iop,opPair in enumerate(self.dSetAttr[mTag]['intOpList']):
                     opTag = tags.src_snk(opPair)
-                    for ir,row in enumerate(range(1,Nrows+1)):
+                    for row in range(1,Nrows+1):
                         rowTag = tags.row(row)
 
                         dkey = (t0,iop,row)
@@ -290,9 +290,9 @@ class TwoPointCorrelator():
                         dset_name_plainBins = plain_group + '/bins'
                         dset_name_plainMean = plain_group + '/mean'
 
-                        dset_plainData = h5_file.create_dataset(dset_name_plainData, data = self.plainData[mTag][dkey])
-                        dset_plainBins = h5_file.create_dataset(dset_name_plainBins, data = self.plainBins[mTag][dkey])
-                        dset_plainMean = h5_file.create_dataset(dset_name_plainMean, data = self.plainMean[mTag][dkey],dtype='f')                                
+                        h5_file.create_dataset(dset_name_plainData, data = self.plainData[mTag][dkey])
+                        h5_file.create_dataset(dset_name_plainBins, data = self.plainBins[mTag][dkey])
+                        h5_file.create_dataset(dset_name_plainMean, data = self.plainMean[mTag][dkey],dtype='f')                                
 
 
         # Write the momentum-averaged data
@@ -304,9 +304,9 @@ class TwoPointCorrelator():
             dset_name_momBins = momAvg_group + '/bins'
             dset_name_momMean = momAvg_group + '/mean'
 
-            dset_momData = h5_file.create_dataset(dset_name_momData, data = self.momData[mKey])
-            dset_momBins = h5_file.create_dataset(dset_name_momBins, data = self.momBins[mKey])
-            dset_momMean = h5_file.create_dataset(dset_name_momMean, data = self.momMean[mKey],dtype='f')
+            h5_file.create_dataset(dset_name_momData, data = self.momData[mKey])
+            h5_file.create_dataset(dset_name_momBins, data = self.momBins[mKey])
+            h5_file.create_dataset(dset_name_momMean, data = self.momMean[mKey],dtype='f')
         #--------------------------------
 
         h5_file.close()
