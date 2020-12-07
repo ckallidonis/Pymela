@@ -77,10 +77,13 @@ class ThreePointCorrelator():
         self.phaseTag = self.analysisInfo['Phasing Tag']
 
         self.moms  = []
+        self.dispAvg = {}
         self.dSetAttr = {}
         self.dSetList = self.dataInfo['Datasets']
         for dSet in self.dSetList:
             momVec = dSet['mom']
+            if momVec[0] != 0 and momVec[1] != 0:
+                raise ValueError('\n Currently support non-zero momentum only in the z-direction!')
             mTag = tags.momString(momVec) # Dataset Attributes are listed for each momentum
             self.dSetAttr[mTag] = {}
 
@@ -93,6 +96,9 @@ class ThreePointCorrelator():
                 self.dSetAttr[mTag][attr] = dSet[attr]
             self.dSetAttr[mTag]['gamma'] = dSet['Insertion Operators']
 
+            # Determine the values of z3 that we will average over
+            self.dispAvg[mTag] = list(dict.fromkeys(np.abs(self.dSetAttr[mTag]['disp'])))
+            self.dispAvg[mTag].sort()
 
             # Read source-sink operators
             intOpFile = dSet['Interpolating Operators File']            
@@ -103,9 +109,9 @@ class ThreePointCorrelator():
                     self.dSetAttr[mTag]['intOpList'].append((op.split()[0],op.split()[1]))
             self.dSetAttr[mTag]['Nop'] = len(ops)
 
-        # Get the momenta that will be averaged over
-        self.momAvg = self.dataInfo['Momentum Average']
-
+        # Get the momenta that will be averaged over        
+        self.momAvg = [[0,0,zm] for zm in list(dict.fromkeys(np.abs([z for x,y,z in self.moms])))]
+        self.momAvg.sort()
     # End __init__() -------------
 
     def printInfo(self):
@@ -115,6 +121,9 @@ class ThreePointCorrelator():
         print(self.moms)
 
         JSONio.dumpDictObject(self.dSetAttr, '\nThreePointCorrelator - Parsed the following Attributes:')        
+
+        print('\n Will average over the momenta:', self.momAvg)
+        print('\n Will average over the displacement values for each momentum:', self.dispAvg)
     #-------------------------------
 
     def getData(self):
@@ -218,6 +227,7 @@ class ThreePointCorrelator():
                         for ri in self.RI:
                             self.avgData[ri][mTag][dkeyAvg] = np.zeros((Ncfg,Nt),dtype=np.float64)
 
+                        # We are averaging for the following attributes
                         for t0 in t0List:
                             for iop,opPair in enumerate(self.dSetAttr[mTag]['intOpList']):
                                 for row in range(1,Nrows+1):
@@ -245,4 +255,124 @@ class ThreePointCorrelator():
                             self.avgMean[ri][mTag][dkeyAvg] = jackknife.mean(self.avgBins[ri][mTag][dkeyAvg],
                                                                              self.Nbins, Nspl=Nt)
 
-            print('\nJackknife analysis for momentum %s completed'%(mTag))
+            print('Jackknife analysis for momentum %s completed'%(mTag))
+        # End for momentum
+
+
+        # Perform average over momenta and z3 values
+        for mom in self.momAvg:
+            mTag = tags.momString(mom)
+            tsepList = self.dSetAttr[mTag]['tsep']
+            dispList = self.dSetAttr[mTag]['disp']
+            dispListAvg = self.dispAvg[mTag]
+            Ncfg = self.dSetAttr[mTag]['Ncfg']
+
+            for ri in self.RI:
+                self.data[ri][mTag] = {}
+                self.bins[ri][mTag] = {}
+                self.mean[ri][mTag] = {}
+
+            for tsep in tsepList:
+                Nt = tsep
+                for gamma in self.dSetAttr[mTag]['gamma']:
+                    for z3 in dispListAvg: # Run over the z3>=0
+                        dkey = (tsep,z3,gamma)
+
+                        for ri in self.RI:
+                            self.data[ri][mTag][dkey] = np.zeros((Ncfg,Nt), dtype=np.float64)
+
+                        if mom == [0,0,0]:
+                            if z3 == 0 or not (z3 in dispList and -z3 in dispList): # Pz=0, z3=0, OR NOT both z3 and -z3 exist
+                                dkeyAvg = (tsep,-z3,gamma) if -z3 in dispList else (tsep,z3,gamma)
+                                for ri in self.RI:
+                                    self.data[ri][mTag][dkey] = self.avgData[ri][mTag][dkeyAvg]
+                            else: # Pz=0, z3!=0
+                                dkeyAvgPosZ = (tsep, z3,gamma)
+                                dkeyAvgNegZ = (tsep,-z3,gamma)
+                                self.data['Re'][mTag][dkey] = 0.5 * (self.avgData['Re'][mTag][dkeyAvgPosZ] + self.avgData['Re'][mTag][dkeyAvgNegZ])
+                                self.data['Im'][mTag][dkey] = 0.5 * (self.avgData['Im'][mTag][dkeyAvgPosZ] - self.avgData['Im'][mTag][dkeyAvgNegZ])
+                        else:
+                            momNeg = [mom[0],mom[1],-mom[2]]
+                            if mom in self.moms and momNeg in self.moms: # Negative momentum exists in global momentum list
+                                mTagPos = mTag
+                                mTagNeg = tags.momString(momNeg)
+                                if z3 == 0: # Pz!=0, z3=0
+                                    self.data['Re'][mTag][dkey] = 0.5 * (self.avgData['Re'][mTagPos][dkey] + self.avgData['Re'][mTagNeg][dkey])
+                                    self.data['Im'][mTag][dkey] = 0.5 * (self.avgData['Im'][mTagPos][dkey] - self.avgData['Im'][mTagNeg][dkey])                             
+                                else: # Pz!=0, z3!=0
+                                    if z3 in dispList and -z3 in dispList:
+                                        dkeyAvgPosZ = (tsep, z3,gamma)
+                                        dkeyAvgNegZ = (tsep,-z3,gamma)
+
+                                        self.data['Re'][mTag][dkey] = 0.25 * (self.avgData['Re'][mTagPos][dkeyAvgPosZ] +
+                                                                              self.avgData['Re'][mTagPos][dkeyAvgNegZ] +
+                                                                              self.avgData['Re'][mTagNeg][dkeyAvgPosZ] +
+                                                                              self.avgData['Re'][mTagNeg][dkeyAvgNegZ])
+
+                                        self.data['Im'][mTag][dkey] = 0.25 * (self.avgData['Im'][mTagPos][dkeyAvgPosZ] -
+                                                                              self.avgData['Im'][mTagPos][dkeyAvgNegZ] -
+                                                                              self.avgData['Im'][mTagNeg][dkeyAvgPosZ] +
+                                                                              self.avgData['Im'][mTagNeg][dkeyAvgNegZ])
+                                    elif z3 in dispList and -z3 not in dispList:
+                                        dkeyAvg = (tsep,z3,gamma)
+                                        self.data['Re'][mTag][dkey] = 0.5 * (self.avgData['Re'][mTagPos][dkeyAvg] +
+                                                                             self.avgData['Re'][mTagNeg][dkeyAvg])
+                                        self.data['Im'][mTag][dkey] = 0.5 * (self.avgData['Im'][mTagPos][dkeyAvg] -
+                                                                             self.avgData['Im'][mTagNeg][dkeyAvg])
+                                    elif -z3 in dispList and z3 not in dispList:
+                                        dkeyAvg = (tsep,-z3,gamma)
+                                        self.data['Re'][mTag][dkey] = 0.5 * (self.avgData['Re'][mTagPos][dkeyAvg] +
+                                                                             self.avgData['Re'][mTagNeg][dkeyAvg])
+                                        self.data['Im'][mTag][dkey] = 0.5 * (self.avgData['Im'][mTagNeg][dkeyAvg] -
+                                                                             self.avgData['Im'][mTagPos][dkeyAvg])
+                                    else:
+                                        raise ValueError('\n Error: Inconsistency with z3 values!!!')
+                            elif mom in self.moms and momNeg not in self.moms:
+                                mTagPos = mTag
+                                mTagNeg = None # Guard
+                                if z3 == 0 or not (z3 in dispList and -z3 in dispList): # Pz!=0, z3=0
+                                    dkeyAvg = (tsep,-z3,gamma) if -z3 in dispList else (tsep,z3,gamma)
+                                    for ri in self.RI:
+                                        self.data[ri][mTag][dkey] = self.avgData[ri][mTagPos][dkeyAvg]
+                                else: # Pz!=0, z3!=0
+                                    dkeyAvgPosZ = (tsep, z3,gamma)
+                                    dkeyAvgNegZ = (tsep,-z3,gamma)
+
+                                    self.data['Re'][mTag][dkey] = 0.5 * (self.avgData['Re'][mTagPos][dkeyAvgPosZ] +
+                                                                         self.avgData['Re'][mTagPos][dkeyAvgNegZ])
+
+                                    self.data['Im'][mTag][dkey] = 0.5 * (self.avgData['Im'][mTagPos][dkeyAvgPosZ] -
+                                                                         self.avgData['Im'][mTagPos][dkeyAvgNegZ])
+                            elif momNeg in self.moms and mom not in self.moms:
+                                mTagPos = None
+                                mTagNeg = tags.momString(momNeg)
+                                if z3 == 0 or not (z3 in dispList and -z3 in dispList): # Pz!=0, z3=0
+                                    dkeyAvg = (tsep,-z3,gamma) if -z3 in dispList else (tsep,z3,gamma)
+                                    for ri in self.RI:
+                                        self.data[ri][mTag][dkey] = self.avgData[ri][mTagNeg][dkeyAvg]
+                                else: # Pz!=0, z3!=0
+                                    dkeyAvgPosZ = (tsep, z3,gamma)
+                                    dkeyAvgNegZ = (tsep,-z3,gamma)
+
+                                    self.data['Re'][mTag][dkey] = 0.5 * (self.avgData['Re'][mTagNeg][dkeyAvgPosZ] +
+                                                                         self.avgData['Re'][mTagNeg][dkeyAvgNegZ])
+
+                                    self.data['Im'][mTag][dkey] = 0.5 * (self.avgData['Im'][mTagNeg][dkeyAvgNegZ] -
+                                                                         self.avgData['Im'][mTagNeg][dkeyAvgPosZ])
+                            else:
+                                raise ValueError('\n Error: Inconsistency with momenta values!!!')
+                        # End if mom != 0
+
+                        # Jackknife sampling over the fully averaged data, for each momentum, tsep, z3 and gamma
+                        for ri in self.RI:
+                            self.bins[ri][mTag][dkey] = np.zeros((self.Nbins,Nt), dtype=np.float64)
+                            for t in range(Nt):
+                                self.bins[ri][mTag][dkey][:,t] = jackknife.sampling(self.data[ri][mTag][dkey][:,t], self.Nbins, self.binsize)
+                            self.mean[ri][mTag][dkey] = jackknife.mean(self.bins[ri][mTag][dkey], self.Nbins, Nspl=Nt)
+
+            print('Averaging over z3 and momenta for momentum %s completed.'%(mTag))
+
+
+
+
+

@@ -22,7 +22,7 @@ inputInfoTags = {'2pt analysis': [analysisInfoTag, c2ptDataInfoTag, ensembleInfo
 
 # What is expected in each object of the JSON input file
 expectedKeys = {c2ptDataInfoTag:  ['Data Main Directory', 'Datasets', 'Data Source', "Write HDF5 Output", "Momentum Average"],
-                c3ptDataInfoTag:  ['Data Main Directory', 'Datasets', 'Data Source', "Write HDF5 Output", "Momentum Average"],
+                c3ptDataInfoTag:  ['Data Main Directory', 'Datasets', 'Data Source', "Write HDF5 Output"],
                 analysisInfoTag:  ['Phasing Tag', 'Nvec', 'Binsize'],
                 ensembleInfoTag:  ['Tag', 'L', 'T', 'alat fm', 'mpi GeV', 'mN GeV'],
                 effEnergyInfoTag: ["HDF5 Output File", "Fitting"]}
