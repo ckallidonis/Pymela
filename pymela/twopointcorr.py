@@ -62,6 +62,8 @@ class TwoPointCorrelator():
         self.dSetList = self.dataInfo['Datasets']
         for dSet in self.dSetList:
             momVec = dSet['mom']
+            if momVec[0] != 0 and momVec[1] != 0:
+                raise ValueError('\n Currently support non-zero momentum only in the z-direction!')                
             mTag = tags.momString(momVec) # Dataset Attributes are listed for each momentum
             self.dSetAttr[mTag] = {}
 
@@ -85,9 +87,9 @@ class TwoPointCorrelator():
                     self.dSetAttr[mTag]['intOpList'].append((op.split()[0],op.split()[1]))
             self.dSetAttr[mTag]['Nop'] = len(ops)
 
-        # Get the momenta that will be averaged over
-        self.momAvg = self.dataInfo['Momentum Average']
-
+        # Get the momenta that will be averaged over        
+        self.momAvg = [[0,0,zm] for zm in list(dict.fromkeys(np.abs([z for x,y,z in self.moms])))]
+        self.momAvg.sort()
     # End __init__() -------------
 
     def printInfo(self):
@@ -216,36 +218,37 @@ class TwoPointCorrelator():
                 self.avgBins[mTag][:,t] = jackknife.sampling(self.avgData[mTag][:,t].real, self.Nbins, self.binsize)
 
             self.avgMean[mTag] = jackknife.mean(self.avgBins[mTag], self.Nbins, Nspl=Nt)
+        # End for momentum -------------
 
-        
         # Perform averaging over momentum
-        if self.momAvg:
-            print('Will perform averaging over the momentum')
+        for mom in self.momAvg:
+            momNeg = [mom[0],mom[1],-mom[2]]
 
-            for mKey, mVals in self.momAvg.items():
-                Nmom_avg = len(mVals)
+            mTag = tags.momString(mom)
+            mTagPos = mTag
+            mTagNeg = tags.momString(momNeg)
 
-                Ncfg = self.dSetAttr[mKey]['Ncfg']
-                Nt = self.dSetAttr[mKey]['Nt']
+            # If the positive (averaged) value does not exist in the Attribute Dictionary, take the negative
+            mTagD = tags.momString(mom)
+            if mTag not in self.dSetAttr.keys():
+                mTagD = tags.momString(momNeg)
 
-                self.momData[mKey] = np.zeros((Ncfg,Nt), dtype=np.complex128)
-                self.momBins[mKey] = np.zeros((self.Nbins,Nt), dtype=np.float64)
-                for m in mVals:
-                    mT = tags.momString(m)
-                    # Check that all momentum values that are averaged have the same Ncfg, Nt
-                    if (self.dSetAttr[mT]['Ncfg'] != Ncfg) and (self.dSetAttr[mT]['Nt'] != Nt):
-                        raise ValueError('Momenta must have the same Ncfg and Nt in order to be averaged.')
+            Ncfg = self.dSetAttr[mTagD]['Ncfg']
+            Nt = self.dSetAttr[mTagD]['Nt']
 
-                    self.momData[mKey] += self.avgData[mT]
-                    self.momBins[mKey] += self.avgBins[mT]
+            self.momData[mTag] = np.zeros((Ncfg,Nt), dtype=np.complex128)
+            self.momBins[mTag] = np.zeros((self.Nbins,Nt), dtype=np.float64)
+            if mom in self.moms and momNeg in self.moms:
+                self.momData[mTag] = 0.5 * (self.avgData[mTagPos] + self.avgData[mTagNeg])
+                self.momBins[mTag] = 0.5 * (self.avgBins[mTagPos] + self.avgBins[mTagNeg])
+            elif mom in self.moms and momNeg not in self.moms:
+                self.momData[mTag] = self.avgData[mTagPos] 
+                self.momBins[mTag] = self.avgBins[mTagPos]
+            elif mom not in self.moms and momNeg in self.moms:
+                self.momData[mTag] = self.avgData[mTagNeg] 
+                self.momBins[mTag] = self.avgBins[mTagNeg]
 
-                self.momData[mKey] /= Nmom_avg 
-                self.momBins[mKey] /= Nmom_avg
-
-                self.momMean[mKey] = jackknife.mean(self.momBins[mKey], self.Nbins, Nspl=Nt)
-        else:
-            print('Will not perform averaging over the momentum')
-
+            self.momMean[mTag] = jackknife.mean(self.momBins[mTag], self.Nbins, Nspl=Nt)
 
         print('Statistical evaluation completed')
     # End doStatistics() -------------
@@ -296,17 +299,18 @@ class TwoPointCorrelator():
 
 
         # Write the momentum-averaged data
-        for mKey in self.momAvg.keys():
-            mh5Tag = tags.momH5(tags.momVec(mKey))
+        for mom in self.momAvg:
+            mTag = tags.momString(mom)
+            mh5Tag = tags.momH5(mom)
 
             momAvg_group = 'momAvg/%s'%(mh5Tag)
             dset_name_momData = momAvg_group + '/data'
             dset_name_momBins = momAvg_group + '/bins'
             dset_name_momMean = momAvg_group + '/mean'
 
-            h5_file.create_dataset(dset_name_momData, data = self.momData[mKey])
-            h5_file.create_dataset(dset_name_momBins, data = self.momBins[mKey])
-            h5_file.create_dataset(dset_name_momMean, data = self.momMean[mKey],dtype='f')
+            h5_file.create_dataset(dset_name_momData, data = self.momData[mTag])
+            h5_file.create_dataset(dset_name_momBins, data = self.momBins[mTag])
+            h5_file.create_dataset(dset_name_momMean, data = self.momMean[mTag],dtype='f')
         #--------------------------------
 
         h5_file.close()
