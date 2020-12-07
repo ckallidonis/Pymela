@@ -36,3 +36,6 @@ def row(row):
 def disp(z3):
     dL = lambda i: ("z" if i != 0 else "") + ("+" if i > 0 else "") + str(i)
     return 'disp_%s'%(dL(z3))
+
+def insertion(gamma):
+    return 'insertion_%s'%(gamma)
