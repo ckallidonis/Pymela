@@ -81,33 +81,35 @@ class ThreePointCorrelator():
         self.dSetAttr = {}
         self.dSetList = self.dataInfo['Datasets']
         for dSet in self.dSetList:
-            momVec = dSet['mom']
-            if momVec[0] != 0 and momVec[1] != 0:
-                raise ValueError('\n Currently support non-zero momentum only in the z-direction!')
-            mTag = tags.momString(momVec) # Dataset Attributes are listed for each momentum
-            self.dSetAttr[mTag] = {}
-
-            self.moms.append(momVec)
+            momList = dSet['Mom List']
 
             if dSet['Compute X-rows']:
                 raise ValueError('Does not support doing cross-rows in two-point function for now!')
 
-            for attr in ['t0','Ncfg','tsep','disp','Nrows','Compute X-rows']:
-                self.dSetAttr[mTag][attr] = dSet[attr]
-            self.dSetAttr[mTag]['gamma'] = dSet['Insertion Operators']
+            for momVec in momList:
+                if momVec[0] != 0 and momVec[1] != 0:
+                    raise ValueError('\n Currently support non-zero momentum only in the z-direction!')
+                mTag = tags.momString(momVec) # Dataset Attributes are listed for each momentum
+                self.dSetAttr[mTag] = {}
 
-            # Determine the values of z3 that we will average over
-            self.dispAvg[mTag] = list(dict.fromkeys(np.abs(self.dSetAttr[mTag]['disp'])))
-            self.dispAvg[mTag].sort()
+                self.moms.append(momVec)
 
-            # Read source-sink operators
-            intOpFile = dSet['Interpolating Operators File']            
-            self.dSetAttr[mTag]['intOpList'] = []
-            with open(intOpFile) as fp:
-                ops = fp.readlines()
-                for op in ops:
-                    self.dSetAttr[mTag]['intOpList'].append((op.split()[0],op.split()[1]))
-            self.dSetAttr[mTag]['Nop'] = len(ops)
+                for attr in ['t0','Ncfg','tsep','disp','Nrows','Compute X-rows']:
+                    self.dSetAttr[mTag][attr] = dSet[attr]
+                self.dSetAttr[mTag]['gamma'] = dSet['Insertion Operators']
+
+                # Determine the values of z3 that we will average over
+                self.dispAvg[mTag] = list(dict.fromkeys(np.abs(self.dSetAttr[mTag]['disp'])))
+                self.dispAvg[mTag].sort()
+
+                # Read source-sink operators
+                intOpFile = dSet['Interpolating Operators File']            
+                self.dSetAttr[mTag]['intOpList'] = []
+                with open(intOpFile) as fp:
+                    ops = fp.readlines()
+                    for op in ops:
+                        self.dSetAttr[mTag]['intOpList'].append((op.split()[0],op.split()[1]))
+                self.dSetAttr[mTag]['Nop'] = len(ops)
 
         # Get the momenta that will be averaged over        
         self.momAvg = [[0,0,zm] for zm in list(dict.fromkeys(np.abs([z for x,y,z in self.moms])))]

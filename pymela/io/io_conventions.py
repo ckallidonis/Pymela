@@ -27,10 +27,10 @@ expectedKeys = {c2ptDataInfoTag:  ['Data Main Directory', 'Datasets', 'Data Sour
                 ensembleInfoTag:  ['Tag', 'L', 'T', 'alat fm', 'mpi GeV', 'mN GeV'],
                 effEnergyInfoTag: ["HDF5 Output File", "Fitting"]}
 
-expectedSubKeys = {c2ptDataInfoTag: {'Datasets': ['mom', 'Ncfg', 't0','Nt','Interpolating Operators File',
+expectedSubKeys = {c2ptDataInfoTag: {'Datasets': ['Mom List', 'Ncfg', 't0','Nt','Interpolating Operators File',
                                                   'Nrows','Compute X-rows']
                                     },
-                   c3ptDataInfoTag: {'Datasets': ['mom', 'Ncfg', 't0','tsep','disp','Interpolating Operators File',
+                   c3ptDataInfoTag: {'Datasets': ['Mom List', 'Ncfg', 't0','tsep','disp','Interpolating Operators File',
                                                   'Insertion Operators', 'Nrows','Compute X-rows']
                                     },                 
                    effEnergyInfoTag: {'Fitting': ['Type', 'Ranges']}
