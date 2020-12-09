@@ -36,8 +36,8 @@ class EffectiveEnergy():
         self.avgBins = {}     # The Jackknife sampling bins of the averaged data
         self.avgMean = {}     # The Jackknife mean of the averaged data
         
-        self.momBins = {}     # The Jackknife sampling bins of the momentum-averaged data
-        self.momMean = {}     # The Jackknife mean of the momentum-averaged data
+        self.bins = {}     # The Jackknife sampling bins of the momentum-averaged data
+        self.mean = {}     # The Jackknife mean of the momentum-averaged data
 
         # Fit data
         self.fitBins = {}
@@ -60,7 +60,7 @@ class EffectiveEnergy():
 
         def logRatio(c2ptBins):
             Nt = self.dSetAttr[mTag]['Nt']
-            binsArr = np.zeros((self.Nbins,Nt),dtype=np.float64)
+            binsArr = np.zeros((self.Nbins,Nt),dtype=np.float128)
             # Need to check element by element to avoid negative log warnings
             for b in range(self.Nbins):
                 for t in range(Nt):
@@ -93,7 +93,7 @@ class EffectiveEnergy():
 
         for mom in self.momAvg:
             mTag = tags.momString(mom)
-            self.momBins[mTag], self.momMean[mTag] = logRatio(self.c2pt.momBins[mTag])
+            self.bins[mTag], self.mean[mTag] = logRatio(self.c2pt.bins[mTag])
 
         print('Effective Energy computed.')
     # End compute() -------------
@@ -116,11 +116,11 @@ class EffectiveEnergy():
                 tini,tfin = fitSeq['Ranges'][mTag]
 
                 Nf = 0
-                self.fitBins[fType][mTag] = np.zeros(self.Nbins,dtype=np.float64)
-                self.chiBins[fType][mTag] = np.zeros(self.Nbins,dtype=np.float64)
+                self.fitBins[fType][mTag] = np.zeros(self.Nbins,dtype=np.float128)
+                self.chiBins[fType][mTag] = np.zeros(self.Nbins,dtype=np.float128)
                 for b in range(self.Nbins):
-                    data = self.momBins[mTag][b,tini:tfin+1]
-                    err  = self.momMean[mTag][1][tini:tfin+1]
+                    data = self.bins[mTag][b,tini:tfin+1]
+                    err  = self.mean[mTag][1][tini:tfin+1]
                     if not np.isnan(data).any():
                         if fType == 'Constant':
                             self.fitBins[fType][mTag][Nf] = constFit.fit(data,err)
@@ -184,11 +184,11 @@ class EffectiveEnergy():
             mh5Tag = tags.momH5(tags.momVec(mTag))
 
             momAvg_group = 'data/momAvg/%s'%(mh5Tag)
-            dset_name_momBins = momAvg_group + '/bins'
-            dset_name_momMean = momAvg_group + '/mean'
+            dset_name_bins = momAvg_group + '/bins'
+            dset_name_mean = momAvg_group + '/mean'
 
-            h5_file.create_dataset(dset_name_momBins, data = self.momBins[mTag])
-            h5_file.create_dataset(dset_name_momMean, data = self.momMean[mTag],dtype='f')
+            h5_file.create_dataset(dset_name_bins, data = self.bins[mTag])
+            h5_file.create_dataset(dset_name_mean, data = self.mean[mTag],dtype='f')
         #--------------------------------
 
         # Write the Fit data
