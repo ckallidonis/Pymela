@@ -114,6 +114,14 @@ class ThreePointCorrelator():
         # Get the momenta that will be averaged over        
         self.momAvg = [[0,0,zm] for zm in list(dict.fromkeys(np.abs([z for x,y,z in self.moms])))]
         self.momAvg.sort()
+
+        # Make sure to include entries for the averaged momentum in the dataset attributes
+        for mom in self.momAvg:
+            mTag = tags.momString(mom)
+            if mTag not in self.dSetAttr.keys():
+                mTagD = tags.momString([mom[0],mom[1],-mom[2]])
+                self.dSetAttr[mTag] = self.dSetAttr[mTagD]
+                print('Momentum %s not in original dataset attributes. Adding from momentum %s'%(mTag,mTagD))
     # End __init__() -------------
 
     def printInfo(self):
@@ -180,15 +188,15 @@ class ThreePointCorrelator():
                                             for n in line:
                                                 it   = c%Nt
                                                 icfg = c//Nt
-                                                rawData[icfg,it] = complex(np.float64(n.split()[1]),
-                                                                           np.float64(n.split()[2]))
+                                                rawData[icfg,it] = complex(np.float128(n.split()[1]),
+                                                                           np.float128(n.split()[2]))
                                                 c += 1
                                         # Done reading file
 
                                         self.plainData['Re'][mTag][dkey] = rawData.real
                                         self.plainData['Im'][mTag][dkey] = rawData.imag
 
-                print('Reading two-point data for momentum %s completed.\n'%(mTag))
+                print('Reading three-point data for momentum %s completed.\n'%(mTag))
 
             self.dataLoaded = True
         else:
@@ -227,7 +235,7 @@ class ThreePointCorrelator():
                     for gamma in self.dSetAttr[mTag]['gamma']:
                         dkeyAvg = (tsep,z3,gamma)
                         for ri in self.RI:
-                            self.avgData[ri][mTag][dkeyAvg] = np.zeros((Ncfg,Nt),dtype=np.float64)
+                            self.avgData[ri][mTag][dkeyAvg] = np.zeros((Ncfg,Nt),dtype=np.float128)
 
                         # We are averaging for the following attributes
                         for t0 in t0List:
@@ -237,7 +245,7 @@ class ThreePointCorrelator():
 
                                     for ri in self.RI:
                                         # Jackknife sampling on the Plain data
-                                        self.plainBins[ri][mTag][dkey] = np.zeros((self.Nbins,Nt), dtype=np.float64)
+                                        self.plainBins[ri][mTag][dkey] = np.zeros((self.Nbins,Nt), dtype=np.float128)
                                         for t in range(Nt):
                                             self.plainBins[ri][mTag][dkey][:,t] = jackknife.sampling(self.plainData[ri][mTag][dkey][:,t], self.Nbins, self.binsize)
                                         self.plainMean[ri][mTag][dkey] = jackknife.mean(self.plainBins[ri][mTag][dkey], self.Nbins, Nspl=Nt)
@@ -250,7 +258,7 @@ class ThreePointCorrelator():
                             self.avgData[ri][mTag][dkeyAvg] = self.avgData[ri][mTag][dkeyAvg] / Navg
 
                             # Jackknife sampling over the averaged data, for each momentum, tsep, z3 and gamma
-                            self.avgBins[ri][mTag][dkeyAvg] = np.zeros((self.Nbins,Nt), dtype=np.float64)
+                            self.avgBins[ri][mTag][dkeyAvg] = np.zeros((self.Nbins,Nt), dtype=np.float128)
                             for t in range(Nt):
                                 self.avgBins[ri][mTag][dkeyAvg][:,t] = jackknife.sampling(self.avgData[ri][mTag][dkeyAvg][:,t],
                                                                                           self.Nbins, self.binsize)
@@ -265,14 +273,10 @@ class ThreePointCorrelator():
         for mom in self.momAvg:
             mTag = tags.momString(mom)
 
-            mTagD = tags.momString(mom)
-            if mTag not in self.dSetAttr.keys():
-                mTagD = tags.momString([mom[0],mom[1],-mom[2]])
-
-            tsepList = self.dSetAttr[mTagD]['tsep']
-            dispList = self.dSetAttr[mTagD]['disp']
-            dispListAvg = self.dispAvg[mTagD]
-            Ncfg = self.dSetAttr[mTagD]['Ncfg']
+            tsepList = self.dSetAttr[mTag]['tsep']
+            dispList = self.dSetAttr[mTag]['disp']
+            dispListAvg = self.dispAvg[mTag]
+            Ncfg = self.dSetAttr[mTag]['Ncfg']
 
             for ri in self.RI:
                 self.data[ri][mTag] = {}
@@ -281,12 +285,12 @@ class ThreePointCorrelator():
 
             for tsep in tsepList:
                 Nt = tsep
-                for gamma in self.dSetAttr[mTagD]['gamma']:
+                for gamma in self.dSetAttr[mTag]['gamma']:
                     for z3 in dispListAvg: # Run over the z3>=0
                         dkey = (tsep,z3,gamma)
 
                         for ri in self.RI:
-                            self.data[ri][mTag][dkey] = np.zeros((Ncfg,Nt), dtype=np.float64)
+                            self.data[ri][mTag][dkey] = np.zeros((Ncfg,Nt), dtype=np.float128)
 
                         if mom == [0,0,0]:
                             if z3 == 0 or not (z3 in dispList and -z3 in dispList): # Pz=0, z3=0, OR NOT both z3 and -z3 exist
@@ -370,7 +374,7 @@ class ThreePointCorrelator():
 
                         # Jackknife sampling over the fully averaged data, for each momentum, tsep, z3 and gamma
                         for ri in self.RI:
-                            self.bins[ri][mTag][dkey] = np.zeros((self.Nbins,Nt), dtype=np.float64)
+                            self.bins[ri][mTag][dkey] = np.zeros((self.Nbins,Nt), dtype=np.float128)
                             for t in range(Nt):
                                 self.bins[ri][mTag][dkey][:,t] = jackknife.sampling(self.data[ri][mTag][dkey][:,t], self.Nbins, self.binsize)
                             self.mean[ri][mTag][dkey] = jackknife.mean(self.bins[ri][mTag][dkey], self.Nbins, Nspl=Nt)
@@ -385,19 +389,14 @@ class ThreePointCorrelator():
             mTag = tags.momString(mom)
             mh5Tag = tags.momH5(mom)
 
-            mTagD = tags.momString(mom)
-            if mTag not in self.dSetAttr.keys():
-                mTagD = tags.momString([mom[0],mom[1],-mom[2]])
-
-
-            tsepList = self.dSetAttr[mTagD]['tsep']
+            tsepList = self.dSetAttr[mTag]['tsep']
             dispListAvg = self.dispAvg[mTag]
 
             for z3 in dispListAvg:
                 dispTag = tags.disp(z3)
                 for tsep in tsepList:
                     tsepTag = tags.tsep(tsep)
-                    for gamma in self.dSetAttr[mTagD]['gamma']:
+                    for gamma in self.dSetAttr[mTag]['gamma']:
                         insTag = tags.insertion(gamma)
                         dkeyAvg = (tsep,z3,gamma)
 
