@@ -38,7 +38,8 @@ def makeInputChecks(runType, ioDict):
                         if val not in subDict.keys():
                             raise ValueError('Expected entry "%s" in sub-object "%s/%s" of JSON input file' % (val,infoTag,key))
 
-        if infoTag == ioConv.c2ptDataInfoTag and infoDict["Write HDF5 Output"]:
+        if( (infoTag == ioConv.c2ptDataInfoTag or infoTag == ioConv.c3ptDataInfoTag or
+             infoTag == ioConv.ratioInfoTag) and infoDict["Write HDF5 Output"]):
             if "HDF5 Output File" not in infoDict:
                 raise ValueError('Got "Write HDF5 Output"=True for %s, but no file is provided. Please define "HDF5 Output File".' %(infoTag))
 

@@ -9,23 +9,27 @@ If these conventions are modified, they are also modified just once within the P
 
 
 # Main Object Conventions
-analysisInfoTag = 'Analysis Info'
-c2ptDataInfoTag = '2pt Data Info'
-c3ptDataInfoTag = '3pt Data Info'
-ensembleInfoTag = 'Ensemble Info'
+analysisInfoTag  = 'Analysis Info'
+c2ptDataInfoTag  = '2pt Data Info'
+c3ptDataInfoTag  = '3pt Data Info'
+ensembleInfoTag  = 'Ensemble Info'
 effEnergyInfoTag = 'Effective Energy Info'
+ratioInfoTag     = 'Ratio Info'
 
 # What is expected in the JSON input file, based on the type of run/test
 inputInfoTags = {'2pt analysis': [analysisInfoTag, c2ptDataInfoTag, ensembleInfoTag],
                  '3pt analysis': [analysisInfoTag, c3ptDataInfoTag, ensembleInfoTag], 
-                 'Effective Energy Analysis': [analysisInfoTag, c2ptDataInfoTag, ensembleInfoTag, effEnergyInfoTag]}
+                 'Effective Energy Analysis': [analysisInfoTag, c2ptDataInfoTag, ensembleInfoTag, effEnergyInfoTag],
+                 'rITD': [analysisInfoTag, c2ptDataInfoTag, c3ptDataInfoTag, ensembleInfoTag, ratioInfoTag] 
+                }
 
 # What is expected in each object of the JSON input file
 expectedKeys = {c2ptDataInfoTag:  ['Data Main Directory', 'Datasets', 'Data Source', "Write HDF5 Output"],
                 c3ptDataInfoTag:  ['Data Main Directory', 'Datasets', 'Data Source', "Write HDF5 Output"],
                 analysisInfoTag:  ['Phasing Tag', 'Nvec', 'Binsize'],
                 ensembleInfoTag:  ['Tag', 'L', 'T', 'alat fm', 'mpi GeV', 'mN GeV'],
-                effEnergyInfoTag: ["HDF5 Output File", "Fitting"]}
+                effEnergyInfoTag: ["HDF5 Output File", "Fitting"],
+                ratioInfoTag    : ["Write HDF5 Output"]}
 
 expectedSubKeys = {c2ptDataInfoTag: {'Datasets': ['Mom List', 'Ncfg', 't0','Nt','Interpolating Operators File',
                                                   'Nrows','Compute X-rows']
