@@ -40,9 +40,9 @@ class TwoPointCorrelator():
         self.avgBins = {}     # The Jackknife sampling bins of the averaged data
         self.avgMean = {}     # The Jackknife mean of the averaged data
         
-        self.momData = {}     # The momentum-averaged data
-        self.momBins = {}     # The Jackknife sampling bins of the momentum-averaged data
-        self.momMean = {}     # The Jackknife mean of the momentum-averaged data
+        self.data = {}     # The momentum-averaged data
+        self.bins = {}     # The Jackknife sampling bins of the momentum-averaged data
+        self.mean = {}     # The Jackknife mean of the momentum-averaged data
 
         self.Nbins = 0     # The number of Jackknife bins (same for plain and averaged data)
 
@@ -89,6 +89,14 @@ class TwoPointCorrelator():
         # Get the momenta that will be averaged over        
         self.momAvg = [[0,0,zm] for zm in list(dict.fromkeys(np.abs([z for x,y,z in self.moms])))]
         self.momAvg.sort()
+
+        for mom in self.momAvg:
+            mTag = tags.momString(mom)
+            if mTag not in self.dSetAttr.keys():
+                mTagD = tags.momString([mom[0],mom[1],-mom[2]])
+                self.dSetAttr[mTag] = self.dSetAttr[mTagD]
+                print('Momentum %s not in original dataset attributes. Adding from momentum %s'%(mTag,mTagD))
+
     # End __init__() -------------
 
     def printInfo(self):
@@ -143,8 +151,8 @@ class TwoPointCorrelator():
                                 for n in line:
                                     it   = c%Nt
                                     icfg = c//Nt
-                                    self.plainData[mTag][dkey][icfg,it] = complex(np.float64(n.split()[1]),
-                                                                                    np.float64(n.split()[2]))
+                                    self.plainData[mTag][dkey][icfg,it] = complex(np.float128(n.split()[1]),
+                                                                                    np.float128(n.split()[2]))
                                     c += 1
                             
                 print('Reading two-point data for momentum %s completed.\n'%(mTag))
@@ -186,13 +194,13 @@ class TwoPointCorrelator():
             self.covMean[mTag] = {}
 
             for t0 in t0List:
-                covSum = np.zeros((Ncfg,Nt), dtype=np.float64)
+                covSum = np.zeros((Ncfg,Nt), dtype=np.float128)
                 for iop,opPair in enumerate(self.dSetAttr[mTag]['intOpList']):
                     for row in range(1,Nrows+1):
                         dkey = (t0,iop,row)
 
                         # Jackknife sampling on the Plain data
-                        self.plainBins[mTag][dkey] = np.zeros((self.Nbins,Nt), dtype=np.float64)
+                        self.plainBins[mTag][dkey] = np.zeros((self.Nbins,Nt), dtype=np.float128)
                         for t in range(Nt):
                             self.plainBins[mTag][dkey][:,t] = jackknife.sampling(self.plainData[mTag][dkey][:,t].real, self.Nbins, self.binsize)
 
@@ -213,7 +221,7 @@ class TwoPointCorrelator():
             self.avgData[mTag] = self.avgData[mTag] / Navg
 
             # Jackknife sampling over the averaged data, for each momentum
-            self.avgBins[mTag] = np.zeros((self.Nbins,Nt), dtype=np.float64)
+            self.avgBins[mTag] = np.zeros((self.Nbins,Nt), dtype=np.float128)
             for t in range(Nt):
                 self.avgBins[mTag][:,t] = jackknife.sampling(self.avgData[mTag][:,t].real, self.Nbins, self.binsize)
 
@@ -228,27 +236,22 @@ class TwoPointCorrelator():
             mTagPos = mTag
             mTagNeg = tags.momString(momNeg)
 
-            # If the positive (averaged) value does not exist in the Attribute Dictionary, take the negative
-            mTagD = tags.momString(mom)
-            if mTag not in self.dSetAttr.keys():
-                mTagD = tags.momString(momNeg)
+            Ncfg = self.dSetAttr[mTag]['Ncfg']
+            Nt = self.dSetAttr[mTag]['Nt']
 
-            Ncfg = self.dSetAttr[mTagD]['Ncfg']
-            Nt = self.dSetAttr[mTagD]['Nt']
-
-            self.momData[mTag] = np.zeros((Ncfg,Nt), dtype=np.complex128)
-            self.momBins[mTag] = np.zeros((self.Nbins,Nt), dtype=np.float64)
+            self.data[mTag] = np.zeros((Ncfg,Nt), dtype=np.complex128)
+            self.bins[mTag] = np.zeros((self.Nbins,Nt), dtype=np.float128)
             if mom in self.moms and momNeg in self.moms:
-                self.momData[mTag] = 0.5 * (self.avgData[mTagPos] + self.avgData[mTagNeg])
-                self.momBins[mTag] = 0.5 * (self.avgBins[mTagPos] + self.avgBins[mTagNeg])
+                self.data[mTag] = 0.5 * (self.avgData[mTagPos] + self.avgData[mTagNeg])
+                self.bins[mTag] = 0.5 * (self.avgBins[mTagPos] + self.avgBins[mTagNeg])
             elif mom in self.moms and momNeg not in self.moms:
-                self.momData[mTag] = self.avgData[mTagPos] 
-                self.momBins[mTag] = self.avgBins[mTagPos]
+                self.data[mTag] = self.avgData[mTagPos] 
+                self.bins[mTag] = self.avgBins[mTagPos]
             elif mom not in self.moms and momNeg in self.moms:
-                self.momData[mTag] = self.avgData[mTagNeg] 
-                self.momBins[mTag] = self.avgBins[mTagNeg]
+                self.data[mTag] = self.avgData[mTagNeg] 
+                self.bins[mTag] = self.avgBins[mTagNeg]
 
-            self.momMean[mTag] = jackknife.mean(self.momBins[mTag], self.Nbins, Nspl=Nt)
+            self.mean[mTag] = jackknife.mean(self.bins[mTag], self.Nbins, Nspl=Nt)
 
         print('Statistical evaluation completed')
     # End doStatistics() -------------
@@ -308,9 +311,9 @@ class TwoPointCorrelator():
             dset_name_momBins = momAvg_group + '/bins'
             dset_name_momMean = momAvg_group + '/mean'
 
-            h5_file.create_dataset(dset_name_momData, data = self.momData[mTag])
-            h5_file.create_dataset(dset_name_momBins, data = self.momBins[mTag])
-            h5_file.create_dataset(dset_name_momMean, data = self.momMean[mTag],dtype='f')
+            h5_file.create_dataset(dset_name_momData, data = self.data[mTag])
+            h5_file.create_dataset(dset_name_momBins, data = self.bins[mTag])
+            h5_file.create_dataset(dset_name_momMean, data = self.mean[mTag],dtype='f')
         #--------------------------------
 
         h5_file.close()
