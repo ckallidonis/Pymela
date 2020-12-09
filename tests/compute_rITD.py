@@ -48,20 +48,16 @@ JSONio.dumpDictObject(ioDict,'\n%s - Got the following Input:' %(fileName))
 # Make cheks on Input data
 JSONio.makeInputChecks(runType, ioDict)
 
-
 c2pt_dataInfo = ioDict[ioConv.c2ptDataInfoTag]
 c3pt_dataInfo = ioDict[ioConv.c3ptDataInfoTag]
 analysisInfo = ioDict[ioConv.analysisInfoTag]
 ensembleInfo = ioDict[ioConv.ensembleInfoTag]
 ratioInfo = ioDict[ioConv.ratioInfoTag]
 
-# Read the two-point functions
+# Read the two-point functions, perform statistical/Jackknife analysis
 c2pt = TwoPointCorrelator(dataInfo = c2pt_dataInfo, analysisInfo = analysisInfo)
 c2pt.printInfo()
-
 c2pt.getData()
-
-# Perform Statistical / Jackknife Analysis
 c2pt.doStatistics()
 
 # Write the output in HDF5 format
@@ -69,13 +65,10 @@ if c2pt_dataInfo['Write HDF5 Output']:
     c2pt.writeHDF5()
 #------------------------------------------------
 
-# Read the three-point functions
+# Read the three-point functions, perform statistical/Jackknife analysis
 c3pt = ThreePointCorrelator(dataInfo = c3pt_dataInfo, analysisInfo = analysisInfo)
 c3pt.printInfo()
-
 c3pt.getData()
-
-# Perform Statistical / Jackknife Analysis
 c3pt.doStatistics()
 
 # Write the output in HDF5 format
@@ -84,15 +77,10 @@ if c3pt_dataInfo['Write HDF5 Output']:
 #------------------------------------------------
 
 # Define and evaluate the three- to two-point function ratios
-ratio = ThreeToTwoPointCorrRatio(c2pt = c2pt, c3pt = c3pt, analysisInfo = analysisInfo)
+ratio = ThreeToTwoPointCorrRatio(c2pt = c2pt, c3pt = c3pt, dataInfo = ratioInfo, analysisInfo = analysisInfo)
 ratio.evaluate()
 
-
-
-
-
-
-
-
-
-
+# Write the output in HDF5 format
+if ratioInfo['Write HDF5 Output']:
+   ratio.writeHDF5()
+#------------------------------------------------

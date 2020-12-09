@@ -19,10 +19,11 @@ import h5py
 # The class holding the ratio of three- to two-point functions
 #
 class ThreeToTwoPointCorrRatio():
-    def __init__(self, c2pt, c3pt, analysisInfo):
+    def __init__(self, c2pt, c3pt, dataInfo, analysisInfo):
         self.c2pt = c2pt
         self.c3pt = c3pt
 
+        self.dataInfo = dataInfo
         self.analysisInfo = analysisInfo
 
         #   The three-point function also has a significant real and imaginary part
@@ -116,77 +117,90 @@ class ThreeToTwoPointCorrRatio():
     # End __evaluate__() -------------
 
 
-    # def writeHDF5(self):
-    #     h5_file = h5py.File(self.dataInfo['HDF5 Output File'],'w')
-
-    #     # Write the Pz- and z3-averaged data
-    #     for mom in self.momAvg:
-    #         mTag = tags.momString(mom)
-    #         mh5Tag = tags.momH5(mom)
-
-    #         mTagD = tags.momString(mom)
-    #         if mTag not in self.dSetAttr.keys():
-    #             mTagD = tags.momString([mom[0],mom[1],-mom[2]])
+    def writeHDF5(self):
+        h5_file = h5py.File(self.dataInfo['HDF5 Output File'],'w')
 
 
-    #         tsepList = self.dSetAttr[mTagD]['tsep']
-    #         dispListAvg = self.dispAvg[mTag]
+        for mom in self.momAvg:
+            mTag = tags.momString(mom)
+            mh5Tag = tags.momH5(mom)            
 
-    #         for z3 in dispListAvg:
-    #             dispTag = tags.disp(z3)
-    #             for tsep in tsepList:
-    #                 tsepTag = tags.tsep(tsep)
-    #                 for gamma in self.dSetAttr[mTagD]['gamma']:
-    #                     insTag = tags.insertion(gamma)
-    #                     dkeyAvg = (tsep,z3,gamma)
+            tsepList    = self.dSetAttr3pt[mTag]['tsep']
+            tsepList_rs = self.dSetAttr3pt[mTag]['tsep'][:-1]
+            dispListAvg = self.dispAvg[mTag]
+            gammaList   = self.dSetAttr3pt[mTag]['gamma']
+            Ntsep    = len(tsepList)
+            Ntsep_rs = len(tsepList_rs)
 
-    #                     # Write the averaged data
-    #                     for ri in self.RI:
-    #                         avg_group = 'avg/%s/%s/%s/%s/%s'%(mh5Tag,tsepTag,dispTag,insTag,ri)
-    #                         dset_name_data = avg_group + '/data'
-    #                         dset_name_bins = avg_group + '/bins'
-    #                         dset_name_mean = avg_group + '/mean'
-    #                         h5_file.create_dataset(dset_name_data, data = self.data[ri][mTag][dkeyAvg])
-    #                         h5_file.create_dataset(dset_name_bins, data = self.bins[ri][mTag][dkeyAvg])
-    #                         h5_file.create_dataset(dset_name_mean, data = self.mean[ri][mTag][dkeyAvg],dtype='f')
-    #     #--------------------------------------
+            for z3 in dispListAvg:
+                dispTag = tags.disp(z3)
+                for gamma in gammaList:
+                    insTag = tags.insertion(gamma)
+                    for ri in self.RI:
+                        
+                        sumRatioH5 = (np.zeros(Ntsep),np.zeros(Ntsep),np.zeros(Ntsep))
+                        for its,tsep in enumerate(tsepList):
+                            dkey = (tsep,z3,gamma)
+                            tsepTag = tags.tsep(tsep)
 
-    #     for mom in self.moms:
-    #         mTag = tags.momString(mom)
-    #         mh5Tag = tags.momH5(mom)
-    #         t0List = self.dSetAttr[mTag]['t0']
-    #         tsepList = self.dSetAttr[mTag]['tsep']
-    #         dispList = self.dSetAttr[mTag]['disp']
-    #         Nrows = self.dSetAttr[mTag]['Nrows']
+                            # Write the plain ratio bins and mean
+                            rType = 'plain'
+                            group = '%s/%s/%s/%s/%s/%s'%(rType,mh5Tag,tsepTag,dispTag,insTag,ri)
+                            dset_name_bins = 'bins/' + group 
+                            dset_name_mean = 'mean/' + group 
 
-    #         for z3 in dispList:
-    #             dispTag = tags.disp(z3)
-    #             for tsep in tsepList:
-    #                 tsepTag = tags.tsep(tsep)
-    #                 for t0 in t0List:
-    #                     t0Tag = tags.t0(t0)
-    #                     for iop,opPair in enumerate(self.dSetAttr[mTag]['intOpList']):
-    #                         opTag = tags.src_snk(opPair)
-    #                         for row in range(1,Nrows+1):
-    #                             rowTag = tags.row(row)
-    #                             for gamma in self.dSetAttr[mTag]['gamma']:
-    #                                 insTag = tags.insertion(gamma)
-    #                                 dkey = (tsep,t0,z3,iop,row,gamma)
+                            h5_file.create_dataset(dset_name_bins, data = self.bins[rType][ri][mTag][dkey])
+                            h5_file.create_dataset(dset_name_mean, data = self.mean[rType][ri][mTag][dkey],dtype='f')
+                            #---------------------------------------------------------------
 
-    #                                 # Write the plain data
-    #                                 for ri in self.RI:
-    #                                     plain_group = 'plain/%s/%s/%s/%s/%s/%s/%s/%s'%(mh5Tag,dispTag,tsepTag,t0Tag,opTag,rowTag,insTag,ri)
-    #                                     dset_name_plainData = plain_group + '/data'
-    #                                     dset_name_plainBins = plain_group + '/bins'
-    #                                     dset_name_plainMean = plain_group + '/mean'
+                            # Write the summed ratio bins
+                            rType = 'sum'
+                            group = '%s/%s/%s/%s/%s/%s'%(rType,mh5Tag,tsepTag,dispTag,insTag,ri)
+                            dset_name_bins = 'bins/' + group
+                            h5_file.create_dataset(dset_name_bins, data = self.bins[rType][ri][mTag][dkey])
 
-    #                                     h5_file.create_dataset(dset_name_plainData, data = self.plainData[ri][mTag][dkey])
-    #                                     h5_file.create_dataset(dset_name_plainBins, data = self.plainBins[ri][mTag][dkey])
-    #                                     h5_file.create_dataset(dset_name_plainMean, data = self.plainMean[ri][mTag][dkey],dtype='f')                                
-    #     #--------------------------------------
+                            # Convert the summed ratio mean into arrays that depend on tsep
+                            sumRatioH5[0][its] = tsep # tsep (x)
+                            sumRatioH5[1][its] = self.mean[rType][ri][mTag][dkey][0] # ratio mean  (y)
+                            sumRatioH5[2][its] = self.mean[rType][ri][mTag][dkey][1] # ratio error (y-error)
+                        # End for tsep
 
-    #     h5_file.close()
-    #     print('Three-point function data written in HDF5.')
+                        # Write the summed ratio means
+                        rType = 'sum'
+                        group = '%s/%s/%s/%s/%s'%(rType,mh5Tag,dispTag,insTag,ri)
+                        dset_name_mean = 'mean/' + group
+                        h5_file.create_dataset(dset_name_mean, data = sumRatioH5, dtype='float64')
+                        #-----------------------------
+
+
+                        # Reduced-summed ratio
+                        rSumRatioH5 = (np.zeros(Ntsep_rs),np.zeros(Ntsep_rs),np.zeros(Ntsep_rs))
+                        for its,tsep in enumerate(tsepList_rs):
+                            dkey = (tsep,z3,gamma)
+                            tsepTag = tags.tsep(tsep)
+
+                            # Write the summed ratio bins
+                            rType = 'r-sum'
+                            group = '%s/%s/%s/%s/%s/%s'%(rType,mh5Tag,tsepTag,dispTag,insTag,ri)
+                            dset_name_bins = 'bins/' + group
+                            h5_file.create_dataset(dset_name_bins, data = self.bins[rType][ri][mTag][dkey])
+
+                            # Convert the reduced-summed ratio mean into arrays that depend on tsep
+                            rSumRatioH5[0][its] = tsep # tsep (x)
+                            rSumRatioH5[1][its] = self.mean[rType][ri][mTag][dkey][0] # ratio mean  (y)
+                            rSumRatioH5[2][its] = self.mean[rType][ri][mTag][dkey][1] # ratio error (y-error)
+                        # End for tsep
+
+                        # Write the reduced-summed ratio means
+                        rType = 'r-sum'
+                        group = '%s/%s/%s/%s/%s'%(rType,mh5Tag,dispTag,insTag,ri)
+                        dset_name_mean = 'mean/' + group
+                        h5_file.create_dataset(dset_name_mean, data = rSumRatioH5, dtype='f')
+                       #-----------------------------
+        # End for momentum
+
+        h5_file.close()
+        print('Ratio data written in HDF5.')
 
 
 
