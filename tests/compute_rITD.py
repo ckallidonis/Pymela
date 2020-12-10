@@ -20,8 +20,9 @@ import pymela.io.io_conventions as ioConv
 from pymela.twopointcorr import TwoPointCorrelator
 from pymela.threepointcorr import ThreePointCorrelator
 from pymela.ratio import ThreeToTwoPointCorrRatio
+from pymela.plateau_fit import PlateauFit
 
-runType = 'rITD'
+runType = 'Compute rITD'
 
 # Avoid writing the compiled files
 sys.dont_write_bytecode = True
@@ -85,3 +86,10 @@ ratio.evaluate()
 if ratioInfo['Write HDF5 Output']:
    ratio.writeHDF5()
 #------------------------------------------------
+
+if 'Plateau' in ratioFitInfo:
+    print('Will perform Plateau Fits on the Plain ratio')
+    plat = PlateauFit(ratio=ratio, ratioType='plain', fitInfo = ratioFitInfo['Plateau'], analysisInfo = analysisInfo)
+    plat.performFits()
+    plat.writeHDF5()
+
