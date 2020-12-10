@@ -21,7 +21,7 @@ ratioFitInfoTag  = 'Ratio Fitting'
 inputInfoTags = {'2pt analysis': [analysisInfoTag, c2ptDataInfoTag, ensembleInfoTag],
                  '3pt analysis': [analysisInfoTag, c3ptDataInfoTag, ensembleInfoTag], 
                  'Effective Energy Analysis': [analysisInfoTag, c2ptDataInfoTag, ensembleInfoTag, effEnergyInfoTag],
-                 'rITD': [analysisInfoTag, c2ptDataInfoTag, c3ptDataInfoTag, ensembleInfoTag, ratioInfoTag] 
+                 'rITD': [analysisInfoTag, c2ptDataInfoTag, c3ptDataInfoTag, ensembleInfoTag, ratioInfoTag, ratioFitInfoTag] 
                 }
 
 # What is expected in each object of the JSON input file
@@ -31,7 +31,7 @@ expectedKeys = {c2ptDataInfoTag:  ['Data Main Directory', 'Datasets', 'Data Sour
                 ensembleInfoTag:  ['Tag', 'L', 'T', 'alat fm', 'mpi GeV', 'mN GeV'],
                 effEnergyInfoTag: ['HDF5 Output File', 'Fitting'],
                 ratioInfoTag    : ['Write HDF5 Output'],
-                ratioFitInfoTag : ['Plateau','Summation']}
+                ratioFitInfoTag : []}
 
 expectedSubKeys = {c2ptDataInfoTag: {'Datasets': ['Mom List', 'Ncfg', 't0','Nt','Interpolating Operators File',
                                                   'Nrows','Compute X-rows']
@@ -43,3 +43,5 @@ expectedSubKeys = {c2ptDataInfoTag: {'Datasets': ['Mom List', 'Ncfg', 't0','Nt',
                    ratioFitInfoTag: {'Plateau'  : ['Type','Label','Chi Criterion'],
                                      'Summation': ['Type','Label','tsepLow']}
                   }
+
+optionalKeys = {ratioFitInfoTag : ['Plateau','Summation','Two-state']}
