@@ -21,7 +21,8 @@ ratioFitInfoTag  = 'Ratio Fitting'
 inputInfoTags = {'2pt analysis': [analysisInfoTag, c2ptDataInfoTag, ensembleInfoTag],
                  '3pt analysis': [analysisInfoTag, c3ptDataInfoTag, ensembleInfoTag], 
                  'Effective Energy Analysis': [analysisInfoTag, c2ptDataInfoTag, ensembleInfoTag, effEnergyInfoTag],
-                 'rITD': [analysisInfoTag, c2ptDataInfoTag, c3ptDataInfoTag, ensembleInfoTag, ratioInfoTag, ratioFitInfoTag] 
+                 'Compute ratio': [analysisInfoTag, c2ptDataInfoTag, c3ptDataInfoTag, ensembleInfoTag, ratioInfoTag], 
+                 'Compute rITD': [analysisInfoTag, c2ptDataInfoTag, c3ptDataInfoTag, ensembleInfoTag, ratioInfoTag, ratioFitInfoTag] 
                 }
 
 # What is expected in each object of the JSON input file
@@ -40,7 +41,7 @@ expectedSubKeys = {c2ptDataInfoTag: {'Datasets': ['Mom List', 'Ncfg', 't0','Nt',
                                                   'Insertion Operators', 'Nrows','Compute X-rows']
                                     },                 
                    effEnergyInfoTag: {'Fitting': ['Type', 'Ranges']},
-                   ratioFitInfoTag: {'Plateau'  : ['Type','Label','Chi Criterion'],
+                   ratioFitInfoTag: {'Plateau'  : ['Type','Label','Chi Criterion','Write HDF5 Output'],
                                      'Summation': ['Type','Label','tsepLow']}
                   }
 
