@@ -53,6 +53,7 @@ c3pt_dataInfo = ioDict[ioConv.c3ptDataInfoTag]
 analysisInfo = ioDict[ioConv.analysisInfoTag]
 ensembleInfo = ioDict[ioConv.ensembleInfoTag]
 ratioInfo = ioDict[ioConv.ratioInfoTag]
+ratioFitInfo = ioDict[ioConv.ratioFitInfoTag]
 
 # Read the two-point functions, perform statistical/Jackknife analysis
 c2pt = TwoPointCorrelator(dataInfo = c2pt_dataInfo, analysisInfo = analysisInfo)

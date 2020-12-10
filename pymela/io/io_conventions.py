@@ -15,6 +15,7 @@ c3ptDataInfoTag  = '3pt Data Info'
 ensembleInfoTag  = 'Ensemble Info'
 effEnergyInfoTag = 'Effective Energy Info'
 ratioInfoTag     = 'Ratio Info'
+ratioFitInfoTag  = 'Ratio Fitting'
 
 # What is expected in the JSON input file, based on the type of run/test
 inputInfoTags = {'2pt analysis': [analysisInfoTag, c2ptDataInfoTag, ensembleInfoTag],
@@ -24,12 +25,13 @@ inputInfoTags = {'2pt analysis': [analysisInfoTag, c2ptDataInfoTag, ensembleInfo
                 }
 
 # What is expected in each object of the JSON input file
-expectedKeys = {c2ptDataInfoTag:  ['Data Main Directory', 'Datasets', 'Data Source', "Write HDF5 Output"],
-                c3ptDataInfoTag:  ['Data Main Directory', 'Datasets', 'Data Source', "Write HDF5 Output"],
+expectedKeys = {c2ptDataInfoTag:  ['Data Main Directory', 'Datasets', 'Data Source', 'Write HDF5 Output'],
+                c3ptDataInfoTag:  ['Data Main Directory', 'Datasets', 'Data Source', 'Write HDF5 Output'],
                 analysisInfoTag:  ['Phasing Tag', 'Nvec', 'Binsize'],
                 ensembleInfoTag:  ['Tag', 'L', 'T', 'alat fm', 'mpi GeV', 'mN GeV'],
-                effEnergyInfoTag: ["HDF5 Output File", "Fitting"],
-                ratioInfoTag    : ["Write HDF5 Output"]}
+                effEnergyInfoTag: ['HDF5 Output File', 'Fitting'],
+                ratioInfoTag    : ['Write HDF5 Output'],
+                ratioFitInfoTag : ['Plateau','Summation']}
 
 expectedSubKeys = {c2ptDataInfoTag: {'Datasets': ['Mom List', 'Ncfg', 't0','Nt','Interpolating Operators File',
                                                   'Nrows','Compute X-rows']
@@ -37,5 +39,7 @@ expectedSubKeys = {c2ptDataInfoTag: {'Datasets': ['Mom List', 'Ncfg', 't0','Nt',
                    c3ptDataInfoTag: {'Datasets': ['Mom List', 'Ncfg', 't0','tsep','disp','Interpolating Operators File',
                                                   'Insertion Operators', 'Nrows','Compute X-rows']
                                     },                 
-                   effEnergyInfoTag: {'Fitting': ['Type', 'Ranges']}
+                   effEnergyInfoTag: {'Fitting': ['Type', 'Ranges']},
+                   ratioFitInfoTag: {'Plateau'  : ['Type','Label','Chi Criterion'],
+                                     'Summation': ['Type','Label','tsepLow']}
                   }
