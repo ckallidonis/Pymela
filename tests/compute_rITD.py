@@ -21,6 +21,7 @@ from pymela.twopointcorr import TwoPointCorrelator
 from pymela.threepointcorr import ThreePointCorrelator
 from pymela.ratio import ThreeToTwoPointCorrRatio
 from pymela.plateau_fit import PlateauFit
+from pymela.summation_fit import SummationFit
 
 runType = 'Compute rITD'
 
@@ -87,9 +88,17 @@ if ratioInfo['Write HDF5 Output']:
    ratio.writeHDF5()
 #------------------------------------------------
 
-if 'Plateau' in ratioFitInfo:
-    print('Will perform Plateau Fits on the Plain ratio')
-    plat = PlateauFit(ratio=ratio, ratioType='plain', fitInfo = ratioFitInfo['Plateau'], analysisInfo = analysisInfo)
-    plat.performFits()
-    plat.writeHDF5()
+# Perform Plateau fits on the plain ratio
+# if 'Plateau' in ratioFitInfo:
+#     print('Will perform Plateau Fits on the Plain ratio')
+#     plat = PlateauFit(ratio=ratio, ratioType='plain', fitInfo = ratioFitInfo['Plateau'], analysisInfo = analysisInfo)
+#     plat.performFits()
+#     plat.writeHDF5()
+
+# Perform Linear fits on the summed ratio
+if 'Summation' in ratioFitInfo:
+    print('Will perform Fits on the summed ratio')
+    summ = SummationFit(ratio=ratio, ratioType='sum', fitInfo = ratioFitInfo['Summation'], analysisInfo = analysisInfo)
+#    summ.performFits()
+#    plat.writeHDF5()
 
