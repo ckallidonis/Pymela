@@ -213,8 +213,8 @@ class SummationFit():
                                     Mmean = self.mean[fLabel][MTag][ri][mTag][dkeyF][0] # Matrix element (slope)
                                     bmean = self.mean[fLabel][bTag][ri][mTag][dkeyF][0] # Intersection
 
-                                    self.fitBands[fLabel][sLTag][ri][mTag][dkeyF]['x'] = x
-                                    self.fitBands[fLabel][sLTag][ri][mTag][dkeyF]['v'] = linearFit.model(x,Mmean,bmean)
+                                    self.fitBands[fLabel][sLTag][ri][mTag][dkeyF]['x'][ix] = x
+                                    self.fitBands[fLabel][sLTag][ri][mTag][dkeyF]['v'][ix] = linearFit.model(x,Mmean,bmean)
 
                                     # Determine error band
                                     errBand = np.zeros(self.Nbins,dtype=np.float64)
@@ -222,7 +222,7 @@ class SummationFit():
                                         Mbins = self.bins[fLabel][MTag][ri][mTag][dkeyF][ib]
                                         bbins = self.bins[fLabel][bTag][ri][mTag][dkeyF][ib]
                                         errBand[ib] = linearFit.model(x,Mbins,bbins)
-                                    self.fitBands[fLabel][sLTag][ri][mTag][dkeyF]['e'] = jackknife.mean(errBand,self.Nbins,Nspl=1)[1]
+                                    self.fitBands[fLabel][sLTag][ri][mTag][dkeyF]['e'][ix] = jackknife.mean(errBand,self.Nbins,Nspl=1)[1]
                 # End for tsepLow ------
                 print('%s error bands for momentum %s completed'%(fType,mTag))
         # End makeLinearFitBands() -------------
@@ -265,6 +265,13 @@ class SummationFit():
                                 dset_name_chiMean = 'chiSquare/mean/' + group
                                 h5_file.create_dataset(dset_name_chiBins, data = self.chiBins[fLabel][sLTag][ri][mTag][dkeyF])
                                 h5_file.create_dataset(dset_name_chiMean, data = self.chiMean[fLabel][sLTag][ri][mTag][dkeyF],dtype='f')
+
+                                # Write fit bands
+                                dset_name_fitBands = 'fitBands/' + group
+                                h5_file.create_dataset(dset_name_fitBands, data = (self.fitBands[fLabel][sLTag][ri][mTag][dkeyF]['x'],
+                                                                                   self.fitBands[fLabel][sLTag][ri][mTag][dkeyF]['v'],
+                                                                                   self.fitBands[fLabel][sLTag][ri][mTag][dkeyF]['e']),
+                                                       dtype='f')
 
                                 # Write Fit parameters
                                 for fP,fpH5 in zip(self.fitParams[fType],self.fitParamsH5[fType]):
