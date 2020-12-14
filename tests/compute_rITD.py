@@ -52,10 +52,10 @@ JSONio.makeInputChecks(runType, ioDict)
 
 c2pt_dataInfo = ioDict[ioConv.c2ptDataInfoTag]
 c3pt_dataInfo = ioDict[ioConv.c3ptDataInfoTag]
-analysisInfo = ioDict[ioConv.analysisInfoTag]
-ensembleInfo = ioDict[ioConv.ensembleInfoTag]
-ratioInfo = ioDict[ioConv.ratioInfoTag]
-ratioFitInfo = ioDict[ioConv.ratioFitInfoTag]
+analysisInfo  = ioDict[ioConv.analysisInfoTag]
+ensembleInfo  = ioDict[ioConv.ensembleInfoTag]
+ratioInfo     = ioDict[ioConv.ratioInfoTag]
+ratioFitInfo  = ioDict[ioConv.ratioFitInfoTag]
 
 # Read the two-point functions, perform statistical/Jackknife analysis
 c2pt = TwoPointCorrelator(dataInfo = c2pt_dataInfo, analysisInfo = analysisInfo)
@@ -100,5 +100,6 @@ if 'Summation' in ratioFitInfo:
     print('Will perform Fits on the summed ratio')
     summ = SummationFit(ratio=ratio, ratioType='sum', fitInfo = ratioFitInfo['Summation'], analysisInfo = analysisInfo)
     summ.performFits()
+    summ.constructFitBands()
     summ.writeHDF5()
 
