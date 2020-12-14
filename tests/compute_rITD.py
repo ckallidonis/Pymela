@@ -21,6 +21,7 @@ from pymela.twopointcorr import TwoPointCorrelator
 from pymela.threepointcorr import ThreePointCorrelator
 from pymela.ratio import ThreeToTwoPointCorrRatio
 from pymela.plateau_fit import PlateauFit
+from pymela.summation_fit import SummationFit
 
 runType = 'Compute rITD'
 
@@ -51,10 +52,10 @@ JSONio.makeInputChecks(runType, ioDict)
 
 c2pt_dataInfo = ioDict[ioConv.c2ptDataInfoTag]
 c3pt_dataInfo = ioDict[ioConv.c3ptDataInfoTag]
-analysisInfo = ioDict[ioConv.analysisInfoTag]
-ensembleInfo = ioDict[ioConv.ensembleInfoTag]
-ratioInfo = ioDict[ioConv.ratioInfoTag]
-ratioFitInfo = ioDict[ioConv.ratioFitInfoTag]
+analysisInfo  = ioDict[ioConv.analysisInfoTag]
+ensembleInfo  = ioDict[ioConv.ensembleInfoTag]
+ratioInfo     = ioDict[ioConv.ratioInfoTag]
+ratioFitInfo  = ioDict[ioConv.ratioFitInfoTag]
 
 # Read the two-point functions, perform statistical/Jackknife analysis
 c2pt = TwoPointCorrelator(dataInfo = c2pt_dataInfo, analysisInfo = analysisInfo)
@@ -87,9 +88,18 @@ if ratioInfo['Write HDF5 Output']:
    ratio.writeHDF5()
 #------------------------------------------------
 
-if 'Plateau' in ratioFitInfo:
-    print('Will perform Plateau Fits on the Plain ratio')
-    plat = PlateauFit(ratio=ratio, ratioType='plain', fitInfo = ratioFitInfo['Plateau'], analysisInfo = analysisInfo)
-    plat.performFits()
-    plat.writeHDF5()
+# Perform Plateau fits on the plain ratio
+# if 'Plateau' in ratioFitInfo:
+#     print('Will perform Plateau Fits on the Plain ratio')
+#     plat = PlateauFit(ratio=ratio, ratioType='plain', fitInfo = ratioFitInfo['Plateau'], analysisInfo = analysisInfo)
+#     plat.performFits()
+#     plat.writeHDF5()
+
+# Perform Linear fits on the summed ratio
+if 'Summation' in ratioFitInfo:
+    print('Will perform Fits on the summed ratio')
+    summ = SummationFit(ratio=ratio, ratioType='sum', fitInfo = ratioFitInfo['Summation'], analysisInfo = analysisInfo)
+    summ.performFits()
+    summ.constructFitBands()
+    summ.writeHDF5()
 

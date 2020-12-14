@@ -49,12 +49,17 @@ def makeInputChecks(runType, ioDict):
                 if key in infoDict.keys():
                     for subDict in infoDict[key]:
                         for val in ioConv.expectedSubKeys[infoTag][key]:
-                            print('key = %s, val = %s'%(key,val))
                             if val not in subDict.keys():
                                 raise ValueError('Expected entry "%s" in sub-object "%s/%s" of JSON input file' % (val,infoTag,key))
 
+                            if val in ioConv.expectedSubSubKeys.keys():
+                                for subVal in ioConv.expectedSubSubKeys[val]:
+                                    if subVal not in subDict[val].keys():
+                                        raise ValueError('Expected entry "%s" in sub-object "%s/%s/%s" of JSON input file' % (subVal,infoTag,key,val))
+
                         if subDict['Write HDF5 Output'] and 'HDF5 Output File' not in subDict:
                             raise ValueError('Got "Write HDF5 Output"=True for %s/%s with label %s, but no file is provided. Please define "HDF5 Output File".' %(infoTag,key,subDict['Label']))
+
 
 
 

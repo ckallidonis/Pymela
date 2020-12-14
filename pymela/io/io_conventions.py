@@ -42,7 +42,10 @@ expectedSubKeys = {c2ptDataInfoTag: {'Datasets': ['Mom List', 'Ncfg', 't0','Nt',
                                     },                 
                    effEnergyInfoTag: {'Fitting': ['Type', 'Ranges']},
                    ratioFitInfoTag: {'Plateau'  : ['Type','Label','Chi Criterion','Write HDF5 Output'],
-                                     'Summation': ['Type','Label','tsepLow']}
+                                     'Summation': ['Type','Label','tsepLow', 'Fit Bands']}
                   }
+
+# Not optimal, perhaps, but a quick and dirty solution
+expectedSubSubKeys = {'Fit Bands': ['Evaluate', 'Npoints']}
 
 optionalKeys = {ratioFitInfoTag : ['Plateau','Summation','Two-state']}

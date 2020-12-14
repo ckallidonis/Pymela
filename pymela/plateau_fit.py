@@ -157,8 +157,6 @@ class PlateauFit():
             fType = fitSeq['Type']
             fLabel = fitSeq['Label']
 
-            h5LabelFit = '%s_%s'%(fType,fLabel)
-
             for mom in self.momAvg:
                 mTag = tags.momString(mom)
                 mh5Tag = tags.momH5(mom)
@@ -177,7 +175,7 @@ class PlateauFit():
 
                             for ri in self.RI:
                                 # Write optimalFitValues
-                                group = '%s/%s/%s/%s/%s/%s'%(h5LabelFit,ri,mh5Tag,dispTag,insTag,tsepTag)
+                                group = '%s/%s/%s/%s/%s'%(ri,mh5Tag,dispTag,insTag,tsepTag)
                                 dset_name = 'OptimalFitRanges/' + group
                                 h5_file.create_dataset(dset_name, data = np.array([self.optimalFit[fLabel][ri][mTag][dkey]]))
 
@@ -186,7 +184,7 @@ class PlateauFit():
                                     tstop  = fAttr['nf=%d'%(nf)]['tstop']
                                     h5LabelNf = 'nf%d_%d-%d'%(nf,tstart,tstop)
 
-                                    group = '%s/%s/%s/%s/%s/%s/%s'%(h5LabelFit,ri,mh5Tag,dispTag,insTag,tsepTag,h5LabelNf)
+                                    group = '%s/%s/%s/%s/%s/%s'%(ri,mh5Tag,dispTag,insTag,tsepTag,h5LabelNf)
                                     dset_name_Mbins = 'MatElem/bins/' + group 
                                     dset_name_Mmean = 'MatElem/mean/' + group 
                                     dset_name_chiBins = 'chiSquare/bins/' + group 
@@ -197,8 +195,8 @@ class PlateauFit():
                                     h5_file.create_dataset(dset_name_chiBins, data = self.chiBins[fLabel][ri][mTag][dkey][nf])
                                     h5_file.create_dataset(dset_name_chiMean, data = self.chiMean[fLabel][ri][mTag][dkey][nf],dtype='f')
             # End for momentum
-            print('Fitting data for %s written in HDF5.'%(h5LabelFit))
-       # End dumpHDF5 ----------------
+            print('Plateau fitting data for type = %s, label = %s written in HDF5.'%(fType,fLabel))
+        # End dumpHDF5 ----------------
 
         for fitSeq in self.fitInfo:
             if fitSeq['Write HDF5 Output']:
