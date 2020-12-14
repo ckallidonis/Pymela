@@ -32,7 +32,8 @@ class SummationFit():
         self.RI = ['Re','Im']
 
         # Generic definitions for each type of fit
-        self.fitParams = {'Linear': ['M','b']}
+        self.fitParams   = {'Linear': ['M','b']}
+        self.fitParamsH5 = {'Linear': ['MatElem','Intersection']}
     
         # What type of fits we will perform:
         self.fitPerform = []
@@ -146,9 +147,6 @@ class SummationFit():
                                         yerr[itL]  = self.ratioMean[ri][mTag][dkey][1]
 
                                     # Perform the fit
-                                    # print('xdata:', xdata[mTag][sLTag])
-                                    # print('ydata:', ydata)
-                                    # print('yerr:' , yerr)
                                     fprmRes, covRes = scipyOpt.curve_fit(linearFit.model, xdata[mTag][sLTag], ydata, sigma=yerr)
 
                                     self.chiBins[fLabel][sLTag][ri][mTag][dkeyF][b] = linearFit.chiSquare(xdata[mTag][sLTag], ydata, yerr,
@@ -174,4 +172,68 @@ class SummationFit():
                 makeLinearFit(fitSeq)
 
     # End performFits() -------------
+
+    def writeHDF5(self):
+
+        def dumpLinearFitsHDF5(fitSeq,h5_file):
+            fType = fitSeq['Type']
+            fLabel = fitSeq['Label']
+            tsepLowList = fitSeq['tsepLow']
+
+            for mom in self.momAvg:
+                mTag = tags.momString(mom)
+                mh5Tag = tags.momH5(mom)
+                dispListAvg = self.dispAvg[mTag]
+                gammaList   = self.dSetAttr3pt[mTag]['gamma']
+                
+                for z3 in dispListAvg:
+                    dispTag = tags.disp(z3)
+                    for gamma in gammaList:
+                        insTag = tags.insertion(gamma)
+                        dkeyF = (z3,gamma)
+
+                        for ri in self.RI:
+                            for tL in tsepLowList:
+                                sLTag = 'tL%d'%(tL)                                
+                                tini = self.tsepFitX[fLabel][mTag][sLTag][0]
+                                tfin = self.tsepFitX[fLabel][mTag][sLTag][-1]
+                                h5LabelT = 'tsep_%d-%d'%(tini,tfin)
+
+                                # Write Chi^2
+                                group = '%s/%s/%s/%s/%s'%(ri,mh5Tag,dispTag,insTag,h5LabelT)
+                                dset_name_chiBins = 'chiSquare/bins/' + group 
+                                dset_name_chiMean = 'chiSquare/mean/' + group
+                                h5_file.create_dataset(dset_name_chiBins, data = self.chiBins[fLabel][sLTag][ri][mTag][dkeyF])
+                                h5_file.create_dataset(dset_name_chiMean, data = self.chiMean[fLabel][sLTag][ri][mTag][dkeyF],dtype='f')
+
+                                # Write Fit parameters
+                                for fP,fpH5 in zip(self.fitParams[fType],self.fitParamsH5[fType]):
+                                    fpTag = fP + '_%s'%(sLTag)
+
+                                    dset_name_bins = '%s/bins/'%(fpH5) + group 
+                                    dset_name_mean = '%s/mean/'%(fpH5) + group
+                                    h5_file.create_dataset(dset_name_bins, data = self.bins[fLabel][fpTag][ri][mTag][dkeyF])
+                                    h5_file.create_dataset(dset_name_mean, data = self.mean[fLabel][fpTag][ri][mTag][dkeyF],dtype='f')
+            # End for momentum
+            print('Summation fitting data for type = %s, label = %s written in HDF5.'%(fType,fLabel))
+        # End dumpLinearFitsHDF5 ----------------
+
+        for fitSeq in self.fitInfo:
+            if fitSeq['Write HDF5 Output']:
+                h5_file = h5py.File(fitSeq['HDF5 Output File'],'w')
+                if fitSeq['Type'] == 'Linear':
+                    dumpLinearFitsHDF5(fitSeq,h5_file)
+                h5_file.close()
+    # End writeHDF5() -------------
+
+
+
+
+
+
+
+
+
+
+
 

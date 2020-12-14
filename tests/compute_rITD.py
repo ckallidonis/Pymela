@@ -100,5 +100,5 @@ if 'Summation' in ratioFitInfo:
     print('Will perform Fits on the summed ratio')
     summ = SummationFit(ratio=ratio, ratioType='sum', fitInfo = ratioFitInfo['Summation'], analysisInfo = analysisInfo)
     summ.performFits()
-#    plat.writeHDF5()
+    summ.writeHDF5()
 
