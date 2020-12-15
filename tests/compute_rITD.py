@@ -34,7 +34,7 @@ usage = "usage: %prog [options] "
 opt_parser = optparse.OptionParser(usage)
 
 opt_parser.add_option("-i", "--input_file", type="string", default='',
-                  help='Input file in JSON format')
+                      help='Input file in JSON format')
 
 (options, args) = opt_parser.parse_args()
 
@@ -45,7 +45,7 @@ if input_file == '':
 
 # Parse and print out the input file
 ioDict = JSONio.parse(input_file)
-JSONio.dumpDictObject(ioDict,'\n%s - Got the following Input:' %(fileName))
+#JSONio.dumpDictObject(ioDict,'\n%s - Got the following Input:' %(fileName))
 
 # Make cheks on Input data
 JSONio.makeInputChecks(runType, ioDict)
@@ -56,6 +56,7 @@ analysisInfo  = ioDict[ioConv.analysisInfoTag]
 ensembleInfo  = ioDict[ioConv.ensembleInfoTag]
 ratioInfo     = ioDict[ioConv.ratioInfoTag]
 ratioFitInfo  = ioDict[ioConv.ratioFitInfoTag]
+ITDInfo       = ioDict[ioConv.ITDInfoTag]
 
 # Read the two-point functions, perform statistical/Jackknife analysis
 c2pt = TwoPointCorrelator(dataInfo = c2pt_dataInfo, analysisInfo = analysisInfo)
@@ -89,11 +90,12 @@ if ratioInfo['Write HDF5 Output']:
 #------------------------------------------------
 
 # Perform Plateau fits on the plain ratio
-# if 'Plateau' in ratioFitInfo:
-#     print('Will perform Plateau Fits on the Plain ratio')
-#     plat = PlateauFit(ratio=ratio, ratioType='plain', fitInfo = ratioFitInfo['Plateau'], analysisInfo = analysisInfo)
-#     plat.performFits()
-#     plat.writeHDF5()
+if 'Plateau' in ratioFitInfo:
+    print('Will perform Plateau Fits on the Plain ratio')
+    plat = PlateauFit(ratio=ratio, ratioType='plain', fitInfo = ratioFitInfo['Plateau'], analysisInfo = analysisInfo)
+    plat.performFits()
+    plat.writeHDF5()
+
 
 # Perform Linear fits on the summed ratio
 if 'Summation' in ratioFitInfo:
@@ -102,4 +104,7 @@ if 'Summation' in ratioFitInfo:
     summ.performFits()
     summ.constructFitBands()
     summ.writeHDF5()
+
+
+
 
