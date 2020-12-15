@@ -16,13 +16,15 @@ ensembleInfoTag  = 'Ensemble Info'
 effEnergyInfoTag = 'Effective Energy Info'
 ratioInfoTag     = 'Ratio Info'
 ratioFitInfoTag  = 'Ratio Fitting'
+ITDInfoTag       = 'ITD'
 
 # What is expected in the JSON input file, based on the type of run/test
 inputInfoTags = {'2pt analysis': [analysisInfoTag, c2ptDataInfoTag, ensembleInfoTag],
                  '3pt analysis': [analysisInfoTag, c3ptDataInfoTag, ensembleInfoTag], 
-                 'Effective Energy Analysis': [analysisInfoTag, c2ptDataInfoTag, ensembleInfoTag, effEnergyInfoTag],
+                 'Effective Energy': [analysisInfoTag, c2ptDataInfoTag, ensembleInfoTag, effEnergyInfoTag],
                  'Compute ratio': [analysisInfoTag, c2ptDataInfoTag, c3ptDataInfoTag, ensembleInfoTag, ratioInfoTag], 
-                 'Compute rITD': [analysisInfoTag, c2ptDataInfoTag, c3ptDataInfoTag, ensembleInfoTag, ratioInfoTag, ratioFitInfoTag] 
+                 'Fit Ratio': [analysisInfoTag, c2ptDataInfoTag, c3ptDataInfoTag, ensembleInfoTag, ratioInfoTag, ratioFitInfoTag],
+                 'Compute rITD': [analysisInfoTag, c2ptDataInfoTag, c3ptDataInfoTag, ensembleInfoTag, ratioInfoTag, ratioFitInfoTag,ITDInfoTag]
                 }
 
 # What is expected in each object of the JSON input file
@@ -32,7 +34,8 @@ expectedKeys = {c2ptDataInfoTag:  ['Data Main Directory', 'Datasets', 'Data Sour
                 ensembleInfoTag:  ['Tag', 'L', 'T', 'alat fm', 'mpi GeV', 'mN GeV'],
                 effEnergyInfoTag: ['HDF5 Output File', 'Fitting'],
                 ratioInfoTag    : ['Write HDF5 Output'],
-                ratioFitInfoTag : []}
+                ratioFitInfoTag : [],
+                ITDInfoTag: ['Optimal Fits']}
 
 expectedSubKeys = {c2ptDataInfoTag: {'Datasets': ['Mom List', 'Ncfg', 't0','Nt','Interpolating Operators File',
                                                   'Nrows','Compute X-rows']
