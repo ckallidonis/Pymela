@@ -57,7 +57,6 @@ class PlateauFit():
         self.Nbins = ratio.Nbins
 
         self.dSetAttr3pt = ratio.dSetAttr3pt
-        self.dSetAttr2pt = ratio.dSetAttr2pt
 
         # Define required fit structures
         self.fitAttr = {}
