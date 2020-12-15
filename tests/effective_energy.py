@@ -20,7 +20,7 @@ import pymela.io.io_conventions as ioConv
 from pymela.twopointcorr import TwoPointCorrelator
 from pymela.effenergy import EffectiveEnergy
 
-runType = 'Effective Energy Analysis'
+runType = 'Effective Energy'
 
 # Avoid writing the compiled files
 sys.dont_write_bytecode = True
