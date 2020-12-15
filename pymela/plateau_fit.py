@@ -83,7 +83,7 @@ class PlateauFit():
                     self.fitAttr[mTag][tsep]['nf=%d'%(nf)]['Npts']   = Npts   # How many points in each fit
                     self.fitAttr[mTag][tsep]['Rng'].append('%d-%d'%(tstart,tstop))                    
     
-    print('Plateau Fits initialized')
+        print('Plateau Fits initialized')
     # End __init__() -------------
 
     def performFits(self):

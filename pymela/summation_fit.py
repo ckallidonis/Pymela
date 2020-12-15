@@ -95,9 +95,7 @@ class SummationFit():
         self.dSetAttr3pt = ratio.dSetAttr3pt
         self.dSetAttr2pt = ratio.dSetAttr2pt
 
-
-    
-    print('Summation Fits initialized')
+        print('Summation Fits initialized')
     # End __init__() -------------
 
     def performFits(self):
