@@ -63,15 +63,32 @@ class ITD():
 
 
         # The ITD bins and mean
-        self.bins = {} # The fit parameter bins
-        self.mean = {} # and mean
+        self.bins = {}
+        self.mean = {}
+
+        # Read-in the optimal fits that will be used in ITD evaluation
+        self.tOptFit = {}
+
         for fit in self.fitLabels:
             self.bins[fit] = {}
             self.mean[fit] = {}
+            self.tOptFit[fit] = {}
             for ri in self.RI:
                 self.bins[fit][ri] = {}
                 self.mean[fit][ri] = {}
+                self.tOptFit[fit][ri] = {}
+
+                for tOpt,momDisp in self.info['Optimal Fits'][fit][ri].items():
+                    for md in momDisp:
+                        for mom in md[0]:
+                            mTag = tags.momString(mom)
+                            for disp in md[1]:
+                                self.tOptFit[fit][ri][(mTag,disp)] = tOpt
         #--------------------------
+
+        # Read-in the optimal values of the fits that will be used in ITD evaluation
+
+
         print('ITD initialized')
     # End __init__() -------------
 
