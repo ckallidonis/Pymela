@@ -22,6 +22,8 @@ from pymela.threepointcorr import ThreePointCorrelator
 from pymela.ratio import ThreeToTwoPointCorrRatio
 from pymela.plateau_fit import PlateauFit
 from pymela.summation_fit import SummationFit
+from pymela.itd import ITD
+
 
 runType = 'Compute rITD'
 
@@ -106,5 +108,6 @@ if 'Summation' in ratioFitInfo:
     summ.writeHDF5()
 
 
-
+rITD = ITD(plat = plat, summ = summ, ITDinfo = ITDInfo, fitInfo = ratioFitInfo)
+rITD.evaluate()
 
