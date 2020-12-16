@@ -108,6 +108,7 @@ if 'Summation' in ratioFitInfo:
     summ.writeHDF5()
 
 
-rITD = ITD(plat = plat, summ = summ, ITDinfo = ITDInfo, fitInfo = ratioFitInfo)
+rITD = ITD(plat = plat, summ = summ, ITDinfo = ITDInfo, fitInfo = ratioFitInfo, ensembleInfo = ensembleInfo)
 rITD.evaluate()
+#rITD.writeHDF5()
 

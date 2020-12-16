@@ -19,13 +19,14 @@ import scipy.optimize as scipyOpt
 # The class holding the Ioffe-time Distributions
 #
 class ITD():
-    def __init__(self, plat = None, summ = None, ITDinfo = None, fitInfo = None):
+    def __init__(self, plat = None, summ = None, ITDinfo = None, fitInfo = None, ensembleInfo = None):
 
         if plat == None and summ == None:
             raise ValueError('All of the supported fit types are "None". Cannot define ITDs!')
 
         self.fitInfo = fitInfo
         self.info = ITDinfo
+        self.ensInfo = ensembleInfo
 
         # Real-Imaginary part
         self.RI = ['Re','Im']
@@ -209,10 +210,76 @@ class ITD():
             # End for fitLabels
         # End evaluatePlateauITD() -------------
 
+
+        def evaluateSummationITD(fitLabels):
+            # This function is specific to the summation fits
+            def getOptimalSummKeys(z3_c,gamma):
+                z3_0 = 0
+                kp = {}
+                for pz in self.pzPos:
+                    zT = z3_0 if 'z0' in pz else z3_c
+                    kp[pz] = (zT,gamma)
+                return kp
+            #-------------------
+
+            # Zero momentum
+            mTag_0 = tags.momString([0,0,0])
+
+            # Temporary variable
+            summBins = {}
+            for ri in self.RI:
+                summBins[ri] = {}
+
+            for fit in fitLabels: # These are just the summation fit labels!
+                for mom in self.momAvg:
+                    mTag = tags.momString(mom)
+                    dispListAvg = self.dispAvg[mTag]
+                    gammaList   = self.dSetAttr3pt[mTag]['gamma']
+
+                    for z3 in dispListAvg:
+                        for gamma in gammaList:
+                            dkey = (mTag,z3,gamma)
+                            self.bins[fit][dkey] = {}
+                            self.mean[fit][dkey] = {}
+
+                            # Need separate for-loop for these because all values of ri
+                            # are needed in each ri-iteration further down
+                            tOpt   = {}
+                            dkeyS  = {}
+                            for ri in self.RI:
+                                tOpt[ri]   = getSelectedFits(fit,ri,mTag,z3)
+                                dkeyS[ri]  = getOptimalSummKeys(z3,gamma)
+
+                            # The off-center values are only needed for the real part
+                            for pz in self.pzPosOff:
+                                mT = mTag_0 if 'p0' in pz else mTag
+                                fpT = 'M_tL%d'%(tOpt['Re'][pz]) # Tag of the matrix element at the selected fit time
+                                summBins['Re'][pz] = self.summ.bins[fit][fpT]['Re'][mT][dkeyS['Re'][pz]]                               
+
+                            # Evaluate the ITDs
+                            for ri in self.RI:                
+                                # The 'center' value is needed for both real and imaginary
+                                fpTc = 'M_tL%d'%(tOpt[ri]['c'])
+                                summBins[ri]['c'] = self.summ.bins[fit][fpTc][ri][mTag][dkeyS[ri]['c']]
+
+                                # Still use the Real part if z3 = 0 and/or mom = 0 
+                                self.bins[fit][dkey][ri] = ( (summBins[ri]  ['c']    / summBins['Re']['z0']) *
+                                                             (summBins['Re']['p0z0'] / summBins['Re']['p0']) )
+
+                                self.mean[fit][dkey][ri] = jackknife.mean(self.bins[fit][dkey][ri],
+                                                                          Nbins = self.Nbins, Nspl=1)
+
+                    print('%s ITD for momentum %s completed'%(fit,mom))
+                # End for momentum
+            # End for fitLabels
+        # End evaluateSummationITD() -------------
+
+
         for fType in self.fitTypes.keys():
             if fType == 'Plateau':
                 evaluatePlateauITD(self.fitTypes['Plateau'])
+            elif fType == 'Summation':
+                evaluateSummationITD(self.fitTypes['Summation'])
 
         print('ITD evaluation completed')
     # End evaluate() -------------
-
