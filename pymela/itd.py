@@ -28,6 +28,10 @@ class ITD():
         self.info = ITDinfo
         self.ensInfo = ensembleInfo
 
+        # Unit momentum = 2*pi/L
+        # Will be needed when writing the ITD as a function of Ioffe time nu = Pz*z3*unitMom
+        self.unitMom = 2.0*np.pi/self.ensInfo['L']
+
         # Real-Imaginary part
         self.RI = ['Re','Im']
 
@@ -283,3 +287,66 @@ class ITD():
 
         print('ITD evaluation completed')
     # End evaluate() -------------
+
+    def writeHDF5(self):
+
+        def computeNuITD(fit_,gamma_,ri_):
+            # nNu = 0
+            # for mom in self.momAvg:
+            #     dispListAvg = self.dispAvg[mTag]
+            #     nNu += len(dispListAvg)
+
+            nuArr = []
+            for mom in self.momAvg:
+                mTag = tags.momString(mom)
+                dispListAvg = self.dispAvg[mTag]
+                for z3 in dispListAvg:
+                    dkey_ = (mTag,z3,gamma_)
+                    nu = mom[2]*z3*self.unitMom # Ioffe-time, nu = Pz*z3*unitMom
+                    nuArr.append([nu,self.mean[fit_][dkey_][ri_][0],self.mean[fit_][dkey_][ri_][1]])
+            nuArr = np.array(nuArr,dtype=np.float64)
+            return nuArr
+        #---------------------------
+
+
+        h5_file = h5py.File(self.info['HDF5 Output File'],'w')
+
+        for fType in self.fitTypes.keys():
+            for fit in self.fitTypes[fType]:
+
+                # Write momentum and z3 dependence
+                for mom in self.momAvg:
+                    mTag = tags.momString(mom)
+                    mh5Tag = tags.momH5(mom)
+                    dispListAvg = self.dispAvg[mTag]
+                    gammaList   = self.dSetAttr3pt[mTag]['gamma']
+
+                    for z3 in dispListAvg:
+                        dispTag = tags.disp(z3)
+                        for gamma in gammaList:
+                            insTag = tags.insertion(gamma)
+                            dkey = (mTag,z3,gamma)
+
+                            for ri in self.RI:    
+                                group = '%s/%s/%s/%s/%s'%(fit,mh5Tag,dispTag,insTag,ri)
+                                dset_name_bins = 'bins/' + group 
+                                dset_name_mean = 'mean/' + group 
+
+                                h5_file.create_dataset(dset_name_bins, data = self.bins[fit][dkey][ri])
+                                h5_file.create_dataset(dset_name_mean, data = self.mean[fit][dkey][ri],dtype='f')
+                # End for momentum
+
+                # TODO: Need to change depedence of gamma to general, rather than for each momentum, take mom=0,0,0 for now
+                gammaList = self.dSetAttr3pt[tags.momString(self.momAvg[0])]['gamma']
+                # Write the nu-dependence of the ITD
+                for gamma in gammaList:
+                    for ri in self.RI:
+                        nuITD = computeNuITD(fit,gamma,ri)                    
+                        group = '%s/%s/%s'%(fit,insTag,ri)
+                        dset_name_nuMean = 'nuDep/' + group 
+                        h5_file.create_dataset(dset_name_nuMean, data = nuITD)
+
+        # End for fType
+
+        h5_file.close()
+        print('Reduced Ioffe-time distributions written in HDF5.')
