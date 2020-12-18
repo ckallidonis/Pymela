@@ -283,3 +283,34 @@ class ITD():
 
         print('ITD evaluation completed')
     # End evaluate() -------------
+
+    def writeHDF5(self):
+
+        h5_file = h5py.File(self.info['HDF5 Output File'],'w')
+
+        for fType in self.fitTypes.keys():
+            for fit in self.fitTypes[fType]:
+
+                for mom in self.momAvg:
+                    mTag = tags.momString(mom)
+                    mh5Tag = tags.momH5(mom)
+                    dispListAvg = self.dispAvg[mTag]
+                    gammaList   = self.dSetAttr3pt[mTag]['gamma']
+
+                    for z3 in dispListAvg:
+                        dispTag = tags.disp(z3)
+                        for gamma in gammaList:
+                            insTag = tags.insertion(gamma)
+                            dkey = (mTag,z3,gamma)
+
+                            for ri in self.RI:    
+                                group = '%s/%s/%s/%s/%s'%(fit,mh5Tag,dispTag,insTag,ri)
+                                dset_name_bins = 'bins/' + group 
+                                dset_name_mean = 'mean/' + group 
+
+                                h5_file.create_dataset(dset_name_bins, data = self.bins[fit][dkey][ri])
+                                h5_file.create_dataset(dset_name_mean, data = self.mean[fit][dkey][ri],dtype='f')
+        # End for fType
+
+        h5_file.close()
+        print('Reduced Ioffe-time distributions written in HDF5.')

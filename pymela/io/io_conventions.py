@@ -35,7 +35,7 @@ expectedKeys = {c2ptDataInfoTag:  ['Data Main Directory', 'Datasets', 'Data Sour
                 effEnergyInfoTag: ['HDF5 Output File', 'Fitting'],
                 ratioInfoTag    : ['Write HDF5 Output'],
                 ratioFitInfoTag : [],
-                ITDInfoTag: ['Optimal Fits']}
+                ITDInfoTag: ['HDF5 Output File','Optimal Fits']}
 
 expectedSubKeys = {c2ptDataInfoTag: {'Datasets': ['Mom List', 'Ncfg', 't0','Nt','Interpolating Operators File',
                                                   'Nrows','Compute X-rows']
