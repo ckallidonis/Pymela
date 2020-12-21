@@ -76,6 +76,9 @@ class ThreePointCorrelator():
         self.Nvec = self.analysisInfo['Nvec']
         self.phaseTag = self.analysisInfo['Phasing Tag']
 
+        # The list of insertion operators we are considering
+        self.gammaList = self.dataInfo['Insertion Operators']
+
         self.moms  = []
         self.dispAvg = {}
         self.dSetAttr = {}
@@ -96,7 +99,6 @@ class ThreePointCorrelator():
 
                 for attr in ['t0','Ncfg','tsep','disp','Nrows','Compute X-rows']:
                     self.dSetAttr[mTag][attr] = dSet[attr]
-                self.dSetAttr[mTag]['gamma'] = dSet['Insertion Operators']
 
                 # Determine the values of z3 that we will average over
                 self.dispAvg[mTag] = list(dict.fromkeys(np.abs(self.dSetAttr[mTag]['disp'])))
@@ -170,7 +172,7 @@ class ThreePointCorrelator():
                                 srcOp,snkOp = opPair
                                 for row in range(1,Nrows+1):
 
-                                    for gamma in self.dSetAttr[mTag]['gamma']:
+                                    for gamma in self.gammaList:
                                         dkey = (tsep,t0,z3,iop,row,gamma)
 
                                         # Determine gamma matrix name and row
@@ -232,7 +234,7 @@ class ThreePointCorrelator():
             for tsep in tsepList:
                 Nt = tsep
                 for z3 in dispList:
-                    for gamma in self.dSetAttr[mTag]['gamma']:
+                    for gamma in self.gammaList:
                         dkeyAvg = (tsep,z3,gamma)
                         for ri in self.RI:
                             self.avgData[ri][mTag][dkeyAvg] = np.zeros((Ncfg,Nt),dtype=np.float128)
@@ -285,7 +287,7 @@ class ThreePointCorrelator():
 
             for tsep in tsepList:
                 Nt = tsep
-                for gamma in self.dSetAttr[mTag]['gamma']:
+                for gamma in self.gammaList:
                     for z3 in dispListAvg: # Run over the z3>=0
                         dkey = (tsep,z3,gamma)
 
@@ -396,7 +398,7 @@ class ThreePointCorrelator():
                 dispTag = tags.disp(z3)
                 for tsep in tsepList:
                     tsepTag = tags.tsep(tsep)
-                    for gamma in self.dSetAttr[mTag]['gamma']:
+                    for gamma in self.gammaList:
                         insTag = tags.insertion(gamma)
                         dkeyAvg = (tsep,z3,gamma)
 
@@ -429,7 +431,7 @@ class ThreePointCorrelator():
                             opTag = tags.src_snk(opPair)
                             for row in range(1,Nrows+1):
                                 rowTag = tags.row(row)
-                                for gamma in self.dSetAttr[mTag]['gamma']:
+                                for gamma in self.gammaList:
                                     insTag = tags.insertion(gamma)
                                     dkey = (tsep,t0,z3,iop,row,gamma)
 
