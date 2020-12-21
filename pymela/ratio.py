@@ -10,7 +10,6 @@ import pymela.io.json_io as JSONio
 import pymela.io.file_formats as ioForm
 import pymela.tools.tag_creators as tags
 import pymela.tools.jackknife as jackknife
-import pymela.tools.gamma as gmat
 
 import numpy as np
 import h5py
@@ -53,6 +52,8 @@ class ThreeToTwoPointCorrRatio():
         self.momAvg = self.c2pt.momAvg
         self.Nbins = self.c2pt.Nbins
 
+        self.gammaList   = self.c3pt.gammaList
+
         self.dispAvg = self.c3pt.dispAvg
 
         self.dSetAttr3pt = self.c3pt.dSetAttr
@@ -67,7 +68,6 @@ class ThreeToTwoPointCorrRatio():
             tsepList    = self.dSetAttr3pt[mTag]['tsep']
             tsepList_rs = self.dSetAttr3pt[mTag]['tsep'][:-1] # Need this for the reduced-summed ratio
             dispListAvg = self.dispAvg[mTag]
-            gammaList   = self.dSetAttr3pt[mTag]['gamma']
 
             for t in self.ratioTypes:
                 for ri in self.RI:
@@ -77,12 +77,12 @@ class ThreeToTwoPointCorrRatio():
             for its, tsep in enumerate(tsepList):
                 Ntins = tsep
                 for z3 in dispListAvg:
-                    for gamma in gammaList:
+                    for gamma in self.gammaList:
                         dkey = (tsep,z3,gamma)
 
                         for ri in self.RI:
-                            self.bins['plain'][ri][mTag][dkey] = np.zeros((self.Nbins,Ntins),dtype = np.float128)
-                            self.bins['sum'][ri][mTag][dkey]   = np.zeros(self.Nbins,dtype = np.float128)
+                            self.bins['plain'][ri][mTag][dkey] = np.zeros((self.Nbins,Ntins),dtype = np.float64)
+                            self.bins['sum'][ri][mTag][dkey]   = np.zeros(self.Nbins,dtype = np.float64)
 
                             for tins in range(Ntins):
                                 # Plain ratio
@@ -103,7 +103,7 @@ class ThreeToTwoPointCorrRatio():
                 tsepL = tsepList[its]
                 tsepH = tsepList[its+1]
                 for z3 in dispListAvg:
-                    for gamma in gammaList:
+                    for gamma in self.gammaList:
                         dkey = (tsep,z3,gamma)
                         dkeyL = (tsepL,z3,gamma)
                         dkeyH = (tsepH,z3,gamma)
@@ -128,13 +128,12 @@ class ThreeToTwoPointCorrRatio():
             tsepList    = self.dSetAttr3pt[mTag]['tsep']
             tsepList_rs = self.dSetAttr3pt[mTag]['tsep'][:-1]
             dispListAvg = self.dispAvg[mTag]
-            gammaList   = self.dSetAttr3pt[mTag]['gamma']
             Ntsep    = len(tsepList)
             Ntsep_rs = len(tsepList_rs)
 
             for z3 in dispListAvg:
                 dispTag = tags.disp(z3)
-                for gamma in gammaList:
+                for gamma in self.gammaList:
                     insTag = tags.insertion(gamma)
                     for ri in self.RI:
                         
@@ -169,7 +168,7 @@ class ThreeToTwoPointCorrRatio():
                         rType = 'sum'
                         group = '%s/%s/%s/%s/%s'%(rType,mh5Tag,dispTag,insTag,ri)
                         dset_name_mean = 'mean/' + group
-                        h5_file.create_dataset(dset_name_mean, data = sumRatioH5, dtype='float64')
+                        h5_file.create_dataset(dset_name_mean, data = sumRatioH5, dtype='f')
                         #-----------------------------
 
 
