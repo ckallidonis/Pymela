@@ -10,7 +10,6 @@ import pymela.io.json_io as JSONio
 import pymela.io.file_formats as ioForm
 import pymela.tools.tag_creators as tags
 import pymela.tools.jackknife as jackknife
-import pymela.tools.gamma as gmat
 import pymela.fit.linear_fit as linearFit
 
 import numpy as np
@@ -91,6 +90,7 @@ class SummationFit():
         self.momAvg = ratio.momAvg
         self.dispAvg = ratio.dispAvg
         self.Nbins = ratio.Nbins
+        self.gammaList = ratio.gammaList
 
         self.dSetAttr3pt = ratio.dSetAttr3pt
 
@@ -109,7 +109,6 @@ class SummationFit():
                 mTag = tags.momString(mom)
                 tsepList = self.dSetAttr3pt[mTag]['tsep']
                 dispListAvg = self.dispAvg[mTag]
-                gammaList   = self.dSetAttr3pt[mTag]['gamma']
 
                 # Determine the x-data for each tLow                
                 self.tsepFitX[fLabel][mTag] = {}
@@ -127,7 +126,7 @@ class SummationFit():
                             self.mean[fLabel][fpTag][ri][mTag] = {}
         
                         for z3 in dispListAvg:
-                            for gamma in gammaList:
+                            for gamma in self.gammaList:
                                 dkeyF = (z3,gamma)
                                 self.chiBins[fLabel][sLTag][ri][mTag][dkeyF]  = np.zeros(self.Nbins,dtype=np.float64)                                   
                                 for fP in fPrmList:
@@ -184,7 +183,6 @@ class SummationFit():
             for mom in self.momAvg:
                 mTag = tags.momString(mom)
                 dispListAvg = self.dispAvg[mTag]
-                gammaList   = self.dSetAttr3pt[mTag]['gamma']
 
                 for tL in tsepLowList:
                     sLTag = 'tL%d'%(tL)           
@@ -199,7 +197,7 @@ class SummationFit():
                     for ri in self.RI:
                         self.fitBands[fLabel][sLTag][ri][mTag] = {}
                         for z3 in dispListAvg:
-                            for gamma in gammaList:
+                            for gamma in self.gammaList:
                                 dkeyF = (z3,gamma)
 
                                 self.fitBands[fLabel][sLTag][ri][mTag][dkeyF] = {'x': np.zeros(Npts,dtype=np.float64), # x
@@ -241,11 +239,10 @@ class SummationFit():
                 mTag = tags.momString(mom)
                 mh5Tag = tags.momH5(mom)
                 dispListAvg = self.dispAvg[mTag]
-                gammaList   = self.dSetAttr3pt[mTag]['gamma']
                 
                 for z3 in dispListAvg:
                     dispTag = tags.disp(z3)
-                    for gamma in gammaList:
+                    for gamma in self.gammaList:
                         insTag = tags.insertion(gamma)
                         dkeyF = (z3,gamma)
 
