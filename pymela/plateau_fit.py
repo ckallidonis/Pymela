@@ -10,7 +10,6 @@ import pymela.io.json_io as JSONio
 import pymela.io.file_formats as ioForm
 import pymela.tools.tag_creators as tags
 import pymela.tools.jackknife as jackknife
-import pymela.tools.gamma as gmat
 import pymela.fit.constant_fit as constFit
 
 import numpy as np
@@ -55,6 +54,7 @@ class PlateauFit():
         self.momAvg = ratio.momAvg
         self.dispAvg = ratio.dispAvg
         self.Nbins = ratio.Nbins
+        self.gammaList = ratio.gammaList
 
         self.dSetAttr3pt = ratio.dSetAttr3pt
 
@@ -96,7 +96,6 @@ class PlateauFit():
                 mTag = tags.momString(mom)
                 tsepList = self.dSetAttr3pt[mTag]['tsep']
                 dispListAvg = self.dispAvg[mTag]
-                gammaList   = self.dSetAttr3pt[mTag]['gamma']
                 
                 for ri in self.RI:
                     self.Mbins[fLabel][ri][mTag] = {}
@@ -108,7 +107,7 @@ class PlateauFit():
                     for tsep in tsepList:
                         fAttr = self.fitAttr[mTag][tsep]
                         for z3 in dispListAvg:
-                            for gamma in gammaList:
+                            for gamma in self.gammaList:
                                 dkey = (tsep,z3,gamma)
 
                                 self.Mbins[fLabel][ri][mTag][dkey] = {}
@@ -122,8 +121,8 @@ class PlateauFit():
                                     tstart = fAttr['nf=%d'%(nf)]['tstart']
                                     tstop  = fAttr['nf=%d'%(nf)]['tstop']
 
-                                    self.Mbins[fLabel][ri][mTag][dkey][nf] = np.zeros(self.Nbins,dtype=np.float128)
-                                    self.chiBins[fLabel][ri][mTag][dkey][nf] = np.zeros(self.Nbins,dtype=np.float128)
+                                    self.Mbins[fLabel][ri][mTag][dkey][nf] = np.zeros(self.Nbins,dtype=np.float64)
+                                    self.chiBins[fLabel][ri][mTag][dkey][nf] = np.zeros(self.Nbins,dtype=np.float64)
 
                                     for b in range(self.Nbins):
                                         data = self.ratioBins[ri][mTag][dkey][b,tstart:tstop+1]
@@ -161,11 +160,10 @@ class PlateauFit():
                 mh5Tag = tags.momH5(mom)
                 tsepList = self.dSetAttr3pt[mTag]['tsep']
                 dispListAvg = self.dispAvg[mTag]
-                gammaList   = self.dSetAttr3pt[mTag]['gamma']
                 
                 for z3 in dispListAvg:
                     dispTag = tags.disp(z3)
-                    for gamma in gammaList:
+                    for gamma in self.gammaList:
                         insTag = tags.insertion(gamma)
                         for tsep in tsepList:
                             dkey = (tsep,z3,gamma)
