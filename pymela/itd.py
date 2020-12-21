@@ -10,7 +10,6 @@ import pymela.io.json_io as JSONio
 import pymela.io.file_formats as ioForm
 import pymela.tools.tag_creators as tags
 import pymela.tools.jackknife as jackknife
-import pymela.tools.gamma as gmat
 
 import numpy as np
 import h5py
@@ -73,12 +72,14 @@ class ITD():
             self.momAvg  = self.plat.momAvg
             self.dispAvg = self.plat.dispAvg
             self.Nbins   = self.plat.Nbins
+            self.gammaList = self.plat.gammaList
             self.dSetAttr3pt = self.plat.dSetAttr3pt
         else:
             # Get these attributes from the summ fits instead, it MUST be defined otherwise ValueError is raised
             self.momAvg  = self.summ.momAvg
             self.dispAvg = self.summ.dispAvg
             self.Nbins   = self.summ.Nbins
+            self.gammaList = self.summ.gammaList
             self.dSetAttr3pt = self.summ.dSetAttr3pt
 
 
@@ -174,10 +175,9 @@ class ITD():
                 for mom in self.momAvg:
                     mTag = tags.momString(mom)
                     dispListAvg = self.dispAvg[mTag]
-                    gammaList   = self.dSetAttr3pt[mTag]['gamma']
 
                     for z3 in dispListAvg:
-                        for gamma in gammaList:
+                        for gamma in self.gammaList:
                             dkey = (mTag,z3,gamma)
                             self.bins[fit][dkey] = {}
                             self.mean[fit][dkey] = {}
@@ -238,10 +238,9 @@ class ITD():
                 for mom in self.momAvg:
                     mTag = tags.momString(mom)
                     dispListAvg = self.dispAvg[mTag]
-                    gammaList   = self.dSetAttr3pt[mTag]['gamma']
 
                     for z3 in dispListAvg:
-                        for gamma in gammaList:
+                        for gamma in self.gammaList:
                             dkey = (mTag,z3,gamma)
                             self.bins[fit][dkey] = {}
                             self.mean[fit][dkey] = {}
@@ -319,11 +318,10 @@ class ITD():
                     mTag = tags.momString(mom)
                     mh5Tag = tags.momH5(mom)
                     dispListAvg = self.dispAvg[mTag]
-                    gammaList   = self.dSetAttr3pt[mTag]['gamma']
 
                     for z3 in dispListAvg:
                         dispTag = tags.disp(z3)
-                        for gamma in gammaList:
+                        for gamma in self.gammaList:
                             insTag = tags.insertion(gamma)
                             dkey = (mTag,z3,gamma)
 
@@ -336,10 +334,8 @@ class ITD():
                                 h5_file.create_dataset(dset_name_mean, data = self.mean[fit][dkey][ri],dtype='f')
                 # End for momentum
 
-                # TODO: Need to change depedence of gamma to general, rather than for each momentum, take mom=0,0,0 for now
-                gammaList = self.dSetAttr3pt[tags.momString(self.momAvg[0])]['gamma']
                 # Write the nu-dependence of the ITD
-                for gamma in gammaList:
+                for gamma in self.gammaList:
                     for ri in self.RI:
                         nuITD = computeNuITD(fit,gamma,ri)                    
                         group = '%s/%s/%s'%(fit,insTag,ri)
