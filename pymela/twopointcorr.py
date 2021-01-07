@@ -48,14 +48,12 @@ class TwoPointCorrelator():
 
         self.covMean = {}  # Average over all attributes but t0, needed for the Covariant Matrix
 
-        self.binsize = self.analysisInfo['Binsize']
-
         self.dataLoaded = False
 
 
         # Fill in Attributes
         self.Nvec = self.analysisInfo['Nvec']
-        self.phaseTag = self.analysisInfo['Phasing Tag']
+        self.binsize = self.analysisInfo['Binsize']
 
         self.moms  = []
         self.dSetAttr = {}
@@ -74,7 +72,7 @@ class TwoPointCorrelator():
 
                 self.moms.append(momVec)
 
-                for attr in ['t0','Ncfg','Nt','Nrows','Compute X-rows']:
+                for attr in ['t0','Ncfg','Nt','Nrows','Compute X-rows','Phase Info']:
                     self.dSetAttr[mTag][attr] = dSet[attr]
 
                 # Read source-sink operators
@@ -120,6 +118,17 @@ class TwoPointCorrelator():
                 mFTag = tags.momFile(mom)
                 t0List = self.dSetAttr[mTag]['t0']
                 Nrows = self.dSetAttr[mTag]['Nrows']
+                phaseInfo = self.dSetAttr[mTag]['Phase Info']
+
+                # Determine phase tag based on momentum sign
+                if list(phaseInfo.keys())[0] == 'unphased':
+                    phFile = phaseInfo['unphased']
+                    phDir = 'unphased'
+                elif list(phaseInfo.keys())[0] == 'phased':
+                    phFile = phaseInfo['phased']['Plus'] if mom[2] >= 0 else phaseInfo['phased']['Minus']
+                    phDir = 'phased/' + phFile
+                else:
+                    raise ValueError('Supported Phase Tag keys are ["unphased","phased"]')
 
                 # These are the dimensions of each dataset
                 Ncfg = self.dSetAttr[mTag]['Ncfg']
@@ -130,7 +139,7 @@ class TwoPointCorrelator():
 
                 for t0 in t0List:
                     t0Tag = tags.t0(t0)
-                    fileDir = ioForm.getTwoPointDirASCII(self.dataInfo['Data Main Directory'],t0Tag,mFTag)
+                    fileDir = ioForm.getTwoPointDirASCII(self.dataInfo['Data Main Directory'],phDir,t0Tag,mFTag)
 
                     for iop,opPair in enumerate(self.dSetAttr[mTag]['intOpList']):
                         srcOp,snkOp = opPair
@@ -138,7 +147,7 @@ class TwoPointCorrelator():
                         for row in range(1,Nrows+1):
                             dkey = (t0,iop,row)
 
-                            fileName = ioForm.getTwoPointFileNameASCII(self.phaseTag,t0Tag,srcOp,snkOp,row,mFTag,self.Nvec)
+                            fileName = ioForm.getTwoPointFileNameASCII(phFile,t0Tag,srcOp,snkOp,row,mFTag,self.Nvec)
                             fileRead = '%s/%s'%(fileDir,fileName)
 
                             print(fileRead)
