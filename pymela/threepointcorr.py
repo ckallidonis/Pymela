@@ -74,7 +74,6 @@ class ThreePointCorrelator():
 
         # Fill in Attributes
         self.Nvec = self.analysisInfo['Nvec']
-        self.phaseTag = self.analysisInfo['Phasing Tag']
 
         # The list of insertion operators we are considering
         self.gammaList = self.dataInfo['Insertion Operators']
@@ -97,7 +96,7 @@ class ThreePointCorrelator():
 
                 self.moms.append(momVec)
 
-                for attr in ['t0','Ncfg','tsep','disp','Nrows','Compute X-rows']:
+                for attr in ['t0','Ncfg','tsep','disp','Nrows','Compute X-rows','Phase Info']:
                     self.dSetAttr[mTag][attr] = dSet[attr]
 
                 # Determine the values of z3 that we will average over
@@ -152,6 +151,17 @@ class ThreePointCorrelator():
                 dispList = self.dSetAttr[mTag]['disp']
                 Nrows = self.dSetAttr[mTag]['Nrows']
                 Ncfg = self.dSetAttr[mTag]['Ncfg']
+                phaseInfo = self.dSetAttr[mTag]['Phase Info']
+
+                # Determine phase tag based on momentum sign
+                if list(phaseInfo.keys())[0] == 'unphased':
+                    phFile = phaseInfo['unphased']
+                    phDir = 'unphased'
+                elif list(phaseInfo.keys())[0] == 'phased':
+                    phFile = phaseInfo['phased']['Plus'] if mom[2] >= 0 else phaseInfo['phased']['Minus']
+                    phDir = 'phased/' + phFile
+                else:
+                    raise ValueError('Supported Phase Tag keys are ["unphased","phased"]')
 
                 # Determine the Jackknife sampling number of Bins
                 self.Nbins = jackknife.Nbins(Ncfg,self.binsize)
@@ -164,7 +174,7 @@ class ThreePointCorrelator():
                     tsepTag = tags.tsep(tsep)
                     for t0 in t0List:
                         t0Tag = tags.t0(t0)
-                        fileDir = ioForm.getThreePointDirASCII(self.dataInfo['Data Main Directory'],t0Tag,tsepTag,mFTag)
+                        fileDir = ioForm.getThreePointDirASCII(self.dataInfo['Data Main Directory'],phDir,t0Tag,tsepTag,mFTag)
                         print('Reading three-point data for momentum %s, tsep = %d, t0 = %d'%(mTag,tsep,t0))
                         for z3 in dispList:
                             dispTag = tags.disp(z3)
@@ -178,7 +188,7 @@ class ThreePointCorrelator():
                                         # Determine gamma matrix name and row
                                         insOp,insRow = gmat.insertionMap(gamma)
 
-                                        fileName = ioForm.getThreePointFileNameASCII(self.phaseTag,t0Tag,tsepTag,
+                                        fileName = ioForm.getThreePointFileNameASCII(phFile,t0Tag,tsepTag,
                                                                                      srcOp,snkOp,row,insOp,insRow,
                                                                                      mFTag,dispTag,self.Nvec)
                                         fileRead = '%s/%s'%(fileDir,fileName)

@@ -17,12 +17,12 @@ def getTwoPointFileNameASCII(phM,t0Tag,src,snk,srow,mFTag,nvec):
         return FileName
 #--------------------------
 
-def getTwoPointDirASCII(mainDir,t0Tag,mFTag):
-        return '%s/%s/%s' % (mainDir,t0Tag,mFTag)
+def getTwoPointDirASCII(mainDir,phDir,t0Tag,mFTag):
+        return '%s/%s/%s/%s' % (mainDir,phDir,t0Tag,mFTag)
 #--------------------------
 
-def getThreePointDirASCII(mainDir,t0Tag,tsepTag,mFTag):
-    return '%s/%s/%s/%s' % (mainDir,t0Tag,mFTag,tsepTag)
+def getThreePointDirASCII(mainDir,phDir,t0Tag,tsepTag,mFTag):
+    return '%s/%s/%s/%s/%s' % (mainDir,phDir,t0Tag,mFTag,tsepTag)
 #--------------------------
 
 def getThreePointFileNameASCII(phM,t0Tag,tsepTag,srcOp,snkOp,row,insOp,insRow,mFTag,dispTag,nvec):
