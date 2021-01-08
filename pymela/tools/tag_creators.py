@@ -28,7 +28,7 @@ def tsep(tsep):
     return 'tsnk_%d'%(tsep)
 
 def src_snk(opPair):
-    return 'src_snk_%s_%s'%(opPair[0],opPair[1])
+    return 'src:%s_snk:%s'%(opPair[0],opPair[1])
 
 def row(row):
     return 'row_%d'%(row)
