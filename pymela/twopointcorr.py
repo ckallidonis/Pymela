@@ -50,6 +50,19 @@ class TwoPointCorrelator():
 
         self.dataLoaded = False
 
+        self.supportedDataSources = ['ASCII','HDF5']
+
+        # Determine data source, make some checks
+        self.dataSource = self.dataInfo['Input Data']['Source']        
+        if self.dataSource not in self.supportedDataSources:
+            raise ValueError('\nUnsupported "Data Source" = %s ' % (self.dataSource))
+
+        if self.dataSource == 'ASCII' and 'Main Directory' not in self.dataInfo['Input Data'].keys():
+            raise ValueError('\n"Main Directory" of data must be provided in "Input Data" when data source is "ASCII"')
+
+        if self.dataSource == 'HDF5' and 'HDF5 File' not in self.dataInfo['Input Data'].keys():
+            raise ValueError('\n"HDF5 File" must be provided in "Input Data" when data source is "HDF5"')
+
 
         # Fill in Attributes
         self.Nvec = self.analysisInfo['Nvec']
@@ -108,10 +121,11 @@ class TwoPointCorrelator():
     #-------------------------------
 
     def getData(self):
-        dataSource = self.dataInfo['Data Source']
-        
-        if dataSource == 'ASCII':
+
+        def getDataASCII():
             print('\nWill read data from ASCII files')
+
+            mainDir = self.dataInfo['Input Data']['Main Directory']
 
             for mom in self.moms:
                 mTag = tags.momString(mom)
@@ -135,11 +149,10 @@ class TwoPointCorrelator():
                 Nt = self.dSetAttr[mTag]['Nt']
 
                 self.plainData[mTag] = {}
-                print('Reading two-point data for momentum %s from files:'%(mTag))
-
                 for t0 in t0List:
                     t0Tag = tags.t0(t0)
-                    fileDir = ioForm.getTwoPointDirASCII(self.dataInfo['Data Main Directory'],phDir,t0Tag,mFTag)
+                    fileDir = ioForm.getTwoPointDirASCII(mainDir,phDir,t0Tag,mFTag)
+                    print('Reading two-point data for momentum %s, t0 = %d'%(mTag,t0))
 
                     for iop,opPair in enumerate(self.dSetAttr[mTag]['intOpList']):
                         srcOp,snkOp = opPair
@@ -148,13 +161,11 @@ class TwoPointCorrelator():
                             dkey = (t0,iop,row)
 
                             fileName = ioForm.getTwoPointFileNameASCII(phFile,t0Tag,srcOp,snkOp,row,mFTag,self.Nvec)
-                            fileRead = '%s/%s'%(fileDir,fileName)
-
-                            print(fileRead)
+                            fullFileName = '%s/%s'%(fileDir,fileName)
                             
                             self.plainData[mTag][dkey] = np.zeros((Ncfg,Nt), dtype=np.complex128)
                             
-                            with open(fileRead) as fp:
+                            with open(fullFileName) as fp:
                                 line = fp.readlines()
                                 c = 0
                                 for n in line:
@@ -164,11 +175,46 @@ class TwoPointCorrelator():
                                                                                     np.float128(n.split()[2]))
                                     c += 1
                             
-                print('Reading two-point data for momentum %s completed.\n'%(mTag))
+                print('Reading two-point data for momentum %s completed.'%(mTag))
+        # End getDataASCII() ----------------------------------
 
-            self.dataLoaded = True
-        else:
-            raise ValueError('\nUnsupported "Data Source" = %s ' % (dataSource))
+
+        def getDataHDF5():
+            print('\nWill read data from HDF5')
+
+            inputHDF5 = self.dataInfo['Input Data']['HDF5 File']
+            h5_file = h5py.File(inputHDF5,'r')
+
+            for mom in self.moms:
+                mTag = tags.momString(mom)
+                mh5Tag = tags.momH5(mom)
+                t0List = self.dSetAttr[mTag]['t0']
+                Nrows = self.dSetAttr[mTag]['Nrows']
+                phaseInfo = self.dSetAttr[mTag]['Phase Info']                
+
+                self.plainData[mTag] = {}
+                for t0 in t0List:
+                    t0Tag = tags.t0(t0)
+                    for iop,opPair in enumerate(self.dSetAttr[mTag]['intOpList']):
+                        opTag = tags.src_snk(opPair)
+                        for row in range(1,Nrows+1):
+                            rowTag = tags.row(row)
+                            dkey = (t0,iop,row)
+
+                            # Get the plain data
+                            dset = 'plain/%s/%s/%s/%s/data'%(mh5Tag,t0Tag,opTag,rowTag)
+                            self.plainData[mTag][dkey] = np.array(h5_file[dset])            
+
+                print('Reading two-point data for momentum %s completed.'%(mTag))
+            h5_file.close()
+        # End getDataHDF5() ------------------------------------
+
+        if self.dataSource == 'ASCII':
+            getDataASCII()
+        elif self.dataSource == 'HDF5':
+            getDataHDF5()
+        self.dataLoaded = True
+
     # End getData() -------------
 
 
