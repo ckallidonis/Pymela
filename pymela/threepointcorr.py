@@ -371,7 +371,7 @@ class ThreePointCorrelator():
                                 dkeyAvgPosZ = (tsep, z3,gamma)
                                 dkeyAvgNegZ = (tsep,-z3,gamma)
                                 self.data['Re'][mTag][dkey] = 0.5 * (self.avgData['Re'][mTag][dkeyAvgPosZ] + self.avgData['Re'][mTag][dkeyAvgNegZ])
-                                self.data['Im'][mTag][dkey] = 0.5 * (self.avgData['Im'][mTag][dkeyAvgPosZ] - self.avgData['Im'][mTag][dkeyAvgNegZ])
+                                self.data['Im'][mTag][dkey] = 0.5 * (self.avgData['Im'][mTag][dkeyAvgPosZ] + self.avgData['Im'][mTag][dkeyAvgNegZ])
                         else:
                             momNeg = [mom[0],mom[1],-mom[2]]
                             if mom in self.moms and momNeg in self.moms: # Negative momentum exists in global momentum list
@@ -379,7 +379,7 @@ class ThreePointCorrelator():
                                 mTagNeg = tags.momString(momNeg)
                                 if z3 == 0: # Pz!=0, z3=0
                                     self.data['Re'][mTag][dkey] = 0.5 * (self.avgData['Re'][mTagPos][dkey] + self.avgData['Re'][mTagNeg][dkey])
-                                    self.data['Im'][mTag][dkey] = 0.5 * (self.avgData['Im'][mTagPos][dkey] - self.avgData['Im'][mTagNeg][dkey])
+                                    self.data['Im'][mTag][dkey] = 0.5 * (self.avgData['Im'][mTagPos][dkey] + self.avgData['Im'][mTagNeg][dkey])
                                 else: # Pz!=0, z3!=0
                                     if z3 in dispList and -z3 in dispList:
                                         dkeyAvgPosZ = (tsep, z3,gamma)
