@@ -72,6 +72,19 @@ class ThreePointCorrelator():
 
         self.dataLoaded = False
 
+        self.supportedDataSources = ['ASCII','HDF5']
+
+        # Determine data source, make some checks
+        self.dataSource = self.dataInfo['Input Data']['Source']        
+        if self.dataSource not in self.supportedDataSources:
+            raise ValueError('\nUnsupported "Data Source" = %s ' % (self.dataSource))
+
+        if self.dataSource == 'ASCII' and 'Main Directory' not in self.dataInfo['Input Data'].keys():
+            raise ValueError('\n"Main Directory" of data must be provided in "Input Data" when data source is "ASCII"')
+
+        if self.dataSource == 'HDF5' and 'HDF5 File' not in self.dataInfo['Input Data'].keys():
+            raise ValueError('\n"HDF5 File" must be provided in "Input Data" when data source is "HDF5"')        
+
         # Fill in Attributes
         self.Nvec = self.analysisInfo['Nvec']
 
@@ -138,10 +151,11 @@ class ThreePointCorrelator():
     #-------------------------------
 
     def getData(self):
-        dataSource = self.dataInfo['Data Source']
         
-        if dataSource == 'ASCII':
+        def getDataASCII():
             print('\nWill read data from ASCII files')
+
+            mainDir = self.dataInfo['Input Data']['Main Directory']
 
             for mom in self.moms:
                 mTag = tags.momString(mom)
@@ -163,9 +177,6 @@ class ThreePointCorrelator():
                 else:
                     raise ValueError('Supported Phase Tag keys are ["unphased","phased"]')
 
-                # Determine the Jackknife sampling number of Bins
-                self.Nbins = jackknife.Nbins(Ncfg,self.binsize)
-
                 for ri in self.RI:
                     self.plainData[ri][mTag] = {}
 
@@ -174,7 +185,7 @@ class ThreePointCorrelator():
                     tsepTag = tags.tsep(tsep)
                     for t0 in t0List:
                         t0Tag = tags.t0(t0)
-                        fileDir = ioForm.getThreePointDirASCII(self.dataInfo['Data Main Directory'],phDir,t0Tag,tsepTag,mFTag)
+                        fileDir = ioForm.getThreePointDirASCII(mainDir,phDir,t0Tag,tsepTag,mFTag)
                         print('Reading three-point data for momentum %s, tsep = %d, t0 = %d'%(mTag,tsep,t0))
                         for z3 in dispList:
                             dispTag = tags.disp(z3)
@@ -209,10 +220,54 @@ class ThreePointCorrelator():
                                         self.plainData['Im'][mTag][dkey] = rawData.imag
 
                 print('Reading three-point data for momentum %s completed.\n'%(mTag))
+        # End getDataASCII() ----------------------------------
 
-            self.dataLoaded = True
-        else:
-            raise ValueError('\nUnsupported "Data Source" = %s ' % (dataSource))
+
+        def getDataHDF5():
+            print('\nWill read data from HDF5')
+
+            inputHDF5 = self.dataInfo['Input Data']['HDF5 File']
+            h5_file = h5py.File(inputHDF5,'r')            
+
+            for mom in self.moms:
+                mTag = tags.momString(mom)
+                mh5Tag = tags.momH5(mom)
+                t0List = self.dSetAttr[mTag]['t0']
+                tsepList = self.dSetAttr[mTag]['tsep']
+                dispList = self.dSetAttr[mTag]['disp']
+                Nrows = self.dSetAttr[mTag]['Nrows']
+
+                for ri in self.RI:
+                    self.plainData[ri][mTag] = {}
+
+                    for z3 in dispList:
+                        dispTag = tags.disp(z3)
+                        for tsep in tsepList:
+                            tsepTag = tags.tsep(tsep)
+                            for t0 in t0List:
+                                t0Tag = tags.t0(t0)
+                                for iop,opPair in enumerate(self.dSetAttr[mTag]['intOpList']):
+                                    opTag = tags.src_snk(opPair)
+                                    for row in range(1,Nrows+1):
+                                        rowTag = tags.row(row)
+                                        for gamma in self.gammaList:
+                                            insTag = tags.insertion(gamma)
+
+                                            dkey = (tsep,t0,z3,iop,row,gamma)
+
+                                            dset = 'plain/%s/%s/%s/%s/%s/%s/%s/%s/data'%(mh5Tag,dispTag,tsepTag,t0Tag,opTag,rowTag,insTag,ri)
+                                            self.plainData[ri][mTag][dkey] = np.array(h5_file[dset])
+
+                print('Reading three-point data for momentum %s completed.'%(mTag))
+        # End getDataHDF5() ------------------------------------
+
+
+        if self.dataSource == 'ASCII':
+            getDataASCII()
+        elif self.dataSource == 'HDF5':
+            getDataHDF5()
+        self.dataLoaded = True
+
     # End getData() -------------
 
 
@@ -230,6 +285,9 @@ class ThreePointCorrelator():
             Ncfg = self.dSetAttr[mTag]['Ncfg']
             Nt0 = len(t0List)
             Nop = self.dSetAttr[mTag]['Nop']
+
+            # Determine the Jackknife sampling number of Bins
+            self.Nbins = jackknife.Nbins(Ncfg,self.binsize)
 
             Navg = Nrows * Nt0 * Nop
 

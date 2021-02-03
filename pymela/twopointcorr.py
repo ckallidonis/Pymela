@@ -190,7 +190,6 @@ class TwoPointCorrelator():
                 mh5Tag = tags.momH5(mom)
                 t0List = self.dSetAttr[mTag]['t0']
                 Nrows = self.dSetAttr[mTag]['Nrows']
-                phaseInfo = self.dSetAttr[mTag]['Phase Info']                
 
                 self.plainData[mTag] = {}
                 for t0 in t0List:

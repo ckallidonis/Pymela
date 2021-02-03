@@ -11,7 +11,7 @@ If these conventions are modified, they are also modified just once within the P
 # Main Object Conventions
 analysisInfoTag  = 'Analysis Info'
 c2ptDataInfoTag  = '2pt Info'
-c3ptDataInfoTag  = '3pt Data Info'
+c3ptDataInfoTag  = '3pt Info'
 ensembleInfoTag  = 'Ensemble Info'
 effEnergyInfoTag = 'Effective Energy Info'
 ratioInfoTag     = 'Ratio Info'
@@ -29,7 +29,7 @@ inputInfoTags = {'2pt analysis': [analysisInfoTag, c2ptDataInfoTag, ensembleInfo
 
 # What is expected in each object of the JSON input file
 expectedKeys = {c2ptDataInfoTag:  ['Input Data', 'Datasets', 'Write HDF5 Output'],
-                c3ptDataInfoTag:  ['Data Main Directory', 'Datasets', 'Insertion Operators', 'Data Source', 'Write HDF5 Output'],
+                c3ptDataInfoTag:  ['Input Data', 'Datasets', 'Insertion Operators', 'Write HDF5 Output'],
                 analysisInfoTag:  ['Nvec', 'Binsize'],
                 ensembleInfoTag:  ['Tag', 'L', 'T', 'alat fm', 'mpi GeV', 'mN GeV'],
                 effEnergyInfoTag: ['HDF5 Output File', 'Fitting'],
