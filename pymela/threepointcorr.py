@@ -472,7 +472,7 @@ class ThreePointCorrelator():
 
                         # Write the averaged data
                         for ri in self.RI:
-                            avg_group = 'avg/%s/%s/%s/%s/%s'%(mh5Tag,tsepTag,dispTag,insTag,ri)
+                            avg_group = 'fullavg/%s/%s/%s/%s/%s'%(mh5Tag,dispTag,tsepTag,insTag,ri)
                             dset_name_data = avg_group + '/data'
                             dset_name_bins = avg_group + '/bins'
                             dset_name_mean = avg_group + '/mean'
@@ -493,19 +493,33 @@ class ThreePointCorrelator():
                 dispTag = tags.disp(z3)
                 for tsep in tsepList:
                     tsepTag = tags.tsep(tsep)
-                    for t0 in t0List:
-                        t0Tag = tags.t0(t0)
-                        for iop,opPair in enumerate(self.dSetAttr[mTag]['intOpList']):
-                            opTag = tags.src_snk(opPair)
-                            for row in range(1,Nrows+1):
-                                rowTag = tags.row(row)
-                                for gamma in self.gammaList:
-                                    insTag = tags.insertion(gamma)
+                    for gamma in self.gammaList:
+                        insTag = tags.insertion(gamma)
+                        dkeyAvg = (tsep,z3,gamma)
+
+                        # Write Avg data
+                        for ri in self.RI:
+                            avg_group = 'avg/%s/%s/%s/%s/%s'%(mh5Tag,dispTag,tsepTag,insTag,ri)
+                            dset_name_avgData = avg_group + '/data'
+                            dset_name_avgBins = avg_group + '/bins'
+                            dset_name_avgMean = avg_group + '/mean'
+
+                            h5_file.create_dataset(dset_name_avgData, data = self.avgData[ri][mTag][dkeyAvg])
+                            h5_file.create_dataset(dset_name_avgBins, data = self.avgBins[ri][mTag][dkeyAvg])
+                            h5_file.create_dataset(dset_name_avgMean, data = self.avgMean[ri][mTag][dkeyAvg],dtype='f')
+
+
+                        for t0 in t0List:
+                            t0Tag = tags.t0(t0)
+                            for iop,opPair in enumerate(self.dSetAttr[mTag]['intOpList']):
+                                opTag = tags.src_snk(opPair)
+                                for row in range(1,Nrows+1):
+                                    rowTag = tags.row(row)
                                     dkey = (tsep,t0,z3,iop,row,gamma)
 
                                     # Write the plain data
                                     for ri in self.RI:
-                                        plain_group = 'plain/%s/%s/%s/%s/%s/%s/%s/%s'%(mh5Tag,dispTag,tsepTag,t0Tag,opTag,rowTag,insTag,ri)
+                                        plain_group = 'plain/%s/%s/%s/%s/%s/%s/%s/%s'%(mh5Tag,dispTag,tsepTag,insTag,t0Tag,opTag,rowTag,ri)
                                         dset_name_plainData = plain_group + '/data'
                                         dset_name_plainBins = plain_group + '/bins'
                                         dset_name_plainMean = plain_group + '/mean'
